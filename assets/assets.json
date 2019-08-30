@@ -1,0 +1,51 @@
+{
+    "basetextures": [
+        {
+            "name": "ImgPortal",
+            "source": "ImgPortal.png"
+        },
+        {
+            "name": "ImgStone",
+            "source": "ImgStone.png"
+        }
+    ],
+    "basematerials": [
+        {
+            "source": "portal.mtl"
+        }
+    ],
+    "textures": [
+        {
+            "name": "TexPortal",
+            "basetexture": "ImgPortal"
+        },
+        {
+            "name": "TexStone",
+            "basetexture": "ImgStone"
+        }
+    ],
+    "materials": [
+        {
+            "name": "MatPortal",
+            "basematerial": "MatPortal",
+            "texture": "TexPortal"
+        },
+        {
+            "name": "MatStone",
+            "basematerial": "MatStone",
+            "texture": "TexStone"
+        }
+    ],
+    "models": [
+        {
+            "name": "ModPortal",
+            "source": "portal.obj"
+        }
+    ],
+    "objects": [
+        {
+            "name": "ObjPortal",
+            "model": "ModPortal"
+        }
+    ]
+}

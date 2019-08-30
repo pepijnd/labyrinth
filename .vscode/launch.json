@@ -1,0 +1,139 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'labyrinth'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=labyrinth",
+                    "--package=labyrinth"
+                ],
+                "filter": {
+                    "name": "labyrinth",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'labyrinth'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=labyrinth",
+                    "--package=labyrinth"
+                ],
+                "filter": {
+                    "name": "labyrinth",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'labyrinth-engine'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=labyrinth-engine"
+                ],
+                "filter": {
+                    "name": "labyrinth-engine",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'labyrinth-glyph'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=labyrinth-glyph"
+                ],
+                "filter": {
+                    "name": "labyrinth-glyph",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'hello'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=hello",
+                    "--package=labyrinth-glyph"
+                ],
+                "filter": {
+                    "name": "hello",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'hello'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=hello",
+                    "--package=labyrinth-glyph"
+                ],
+                "filter": {
+                    "name": "hello",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'labyrinth-obj'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=labyrinth-obj"
+                ],
+                "filter": {
+                    "name": "labyrinth-obj",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
