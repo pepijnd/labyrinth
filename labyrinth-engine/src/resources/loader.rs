@@ -1,6 +1,11 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use std::io::{self, BufReader};
+use std::io::prelude::*;
+use std::fs::File;
+
+
 use image::RgbaImage;
 use glium::backend::Facade;
 
@@ -25,12 +30,58 @@ impl ResourceLoader {
         }
     }
 
-    pub fn load_file<R>(&mut self, mut file: R) where R: std::io::Read {
+    pub fn load_file<F, R>(&mut self, facade : &F, mut file: R) 
+    where 
+        R: std::io::Read,
+        F: Facade
+    
+    {
+        let mut dir = std::env::current_dir().unwrap();
+        dir.push("assets/");
+
         let mut input = String::new();
         file.read_to_string(&mut input).unwrap();
         let parsed = json::parse(input.as_str()).unwrap();
-        
-        println!("test");
+        if let JsonValue::Object(assets) = parsed {
+            if let Some(basetextures) = assets.get("basetextures") {
+                if let JsonValue::Array(basetextures) = basetextures {
+                    for basetexture in basetextures.iter() {
+                        if let JsonValue::Object(basetexture) = basetexture {
+                            let name = basetexture.get("name").unwrap().as_str().unwrap();
+                            let source = basetexture.get("source").unwrap().as_str().unwrap();
+                            let mut path = dir.clone();
+                            path.push(source);
+                            let file = File::open(path).unwrap();
+                            let file = BufReader::new(file);
+                            self.load_basetexture(facade, String::from(name), image::load(file, image::PNG).unwrap().to_rgba());
+                        }
+                    }
+                }
+            } else { panic!() }
+            if let Some(basematerials) = assets.get("basematerials") {
+                if let JsonValue::Array(basematerials) = basematerials {
+                    for basematerial in basematerials.iter() {
+                        if let JsonValue::Object(basematerial) = basematerial {
+                            let source = basematerial.get("source").unwrap().as_str().unwrap();
+                            let mut path = dir.clone();
+                            path.push(source);
+                            let file = File::open(path).unwrap();
+                            let file = BufReader::new(file);
+                            self.load_basematerial(file);
+                        }
+                    }
+                }
+            } else { panic!() }
+            if let Some(textures) = assets.get("textures") {
+                if let JsonValue::Array(textures) = textures {
+                    for texture in textures.iter() {
+                        if let JsonValue::Object(texture) = texture {
+                            
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn load_basetexture<F>(&mut self, facade: &F, key: String, image: RgbaImage)

@@ -57,7 +57,7 @@ impl Runner {
         let mut path = std::env::current_dir().unwrap();
         path.push(std::path::Path::new("assets/assets.json"));
 
-        loader.load_file(std::fs::File::open(std::path::Path::new(path.as_path())).unwrap());
+        loader.load_file(&display, std::fs::File::open(std::path::Path::new(path.as_path())).unwrap());
 
         std::thread::spawn(move || {
             let mut last_update = std::time::Instant::now();
