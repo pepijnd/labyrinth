@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["Pepijn Dragt <pepijn.dragt@gmail.com>"]
 edition = "2018"
 
-[dependencies]
-
 [dependencies.labyrinth-engine]
 path = "./labyrinth-engine"
 
@@ -14,5 +12,11 @@ members = [
   ".",
   "labyrinth-engine",
   "labyrinth-glyph",
-  "labyrinth-obj"
+  "labyrinth-obj",
+  "labyrinth-cgmath"
 ]
+
+[profile.release]
+debug = false
+lto = true
+codegen-units = 1

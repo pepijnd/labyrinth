@@ -21,13 +21,13 @@ pub struct MtlSet {
 #[allow(missing_docs)]
 pub struct Material {
   pub name: String,
-  pub specular_coefficient: f64,
+  pub specular_coefficient: f32,
   pub color_ambient: Color,
   pub color_diffuse: Color,
   pub color_specular: Color,
   pub color_emissive: Option<Color>,
-  pub optical_density: Option<f64>,
-  pub alpha: f64,
+  pub optical_density: Option<f32>,
+  pub alpha: f32,
   pub illumination: Illumination,
   pub uv_map: Option<String>,
 }
@@ -42,15 +42,10 @@ pub enum Illumination {
   TransparentGlass
 }
 
-#[derive(Clone, Copy, Debug)]
 #[allow(missing_docs)]
-pub struct Color {
-  pub r: f64,
-  pub g: f64,
-  pub b: f64,
-}
+pub type Color = labyrinth_cgmath::FloatVec3;
 
-fn fuzzy_cmp(a: f64, b: f64, delta: f64) -> Ordering {
+fn fuzzy_cmp(a: f32, b: f32, delta: f32) -> Ordering {
   if (a - b).abs() <= delta {
     Equal
   } else if a < b {
@@ -60,28 +55,12 @@ fn fuzzy_cmp(a: f64, b: f64, delta: f64) -> Ordering {
   }
 }
 
-fn fuzzy_opt_cmp(a: Option<f64>, b: Option<f64>, delta: f64) -> Ordering {
+fn fuzzy_opt_cmp(a: Option<f32>, b: Option<f32>, delta: f32) -> Ordering {
   match (a, b) {
     (None, None) => Equal,
     (Some(_), None) => Greater,
     (None, Some(_)) => Less,
     (Some(a), Some(b)) => fuzzy_cmp(a, b, delta),
-  }
-}
-
-impl PartialEq for Color {
-  fn eq(&self, other: &Color) -> bool {
-    self.partial_cmp(other).unwrap() == Equal
-  }
-}
-
-impl PartialOrd for Color {
-  fn partial_cmp(&self, other: &Color) -> Option<Ordering> {
-    Some(
-      fuzzy_cmp(self.r, other.r, 0.00001)
-        .lexico(|| fuzzy_cmp(self.g, other.g, 0.00001))
-        .lexico(|| fuzzy_cmp(self.b, other.b, 0.00001)),
-    )
   }
 }
 
@@ -97,31 +76,6 @@ impl PartialOrd for Material {
       self
         .name
         .cmp(&other.name)
-        .lexico(|| {
-          fuzzy_cmp(
-            self.specular_coefficient,
-            other.specular_coefficient,
-            0.00001,
-          )
-        })
-        .lexico(|| {
-          self
-            .color_ambient
-            .partial_cmp(&other.color_ambient)
-            .unwrap()
-        })
-        .lexico(|| {
-          self
-            .color_diffuse
-            .partial_cmp(&other.color_diffuse)
-            .unwrap()
-        })
-        .lexico(|| {
-          self
-            .color_specular
-            .partial_cmp(&other.color_specular)
-            .unwrap()
-        })
         .lexico(|| fuzzy_opt_cmp(self.optical_density, other.optical_density, 0.00001))
         .lexico(|| fuzzy_cmp(self.alpha, other.alpha, 0.00001))
         .lexico(|| self.illumination.cmp(&other.illumination))
@@ -202,11 +156,11 @@ impl<'a> Parser<'a> {
     }
   }
 
-  fn parse_f64(&mut self) -> Result<f64, ParseError> {
+  fn parse_f32(&mut self) -> Result<f32, ParseError> {
     match self.next() {
-      None => self.error("Expected f64 but got end of input.".to_owned()),
+      None => self.error("Expected f32 but got end of input.".to_owned()),
       Some(s) => {
-        lexical::try_parse(&s).map_err(|_| self.error_raw(format!("Expected f64 but got {}.", s)))
+        lexical::try_parse(&s).map_err(|_| self.error_raw(format!("Expected f32 but got {}.", s)))
       }
     }
   }
@@ -229,16 +183,16 @@ impl<'a> Parser<'a> {
   }
 
   fn parse_color(&mut self) -> Result<Color, ParseError> {
-    let r = self.parse_f64()?;
-    let g = self.parse_f64()?;
-    let b = self.parse_f64()?;
+    let r = self.parse_f32()?;
+    let g = self.parse_f32()?;
+    let b = self.parse_f32()?;
 
-    Ok(Color { r: r, g: g, b: b })
+    Ok(Color { x: r, y: g, z: b })
   }
 
-  fn parse_specular_coefficeint(&mut self) -> Result<f64, ParseError> {
+  fn parse_specular_coefficeint(&mut self) -> Result<f32, ParseError> {
     self.parse_tag("Ns")?;
-    self.parse_f64()
+    self.parse_f32()
   }
 
   fn parse_ambient_color(&mut self) -> Result<Color, ParseError> {
@@ -264,20 +218,20 @@ impl<'a> Parser<'a> {
     self.parse_color().map(|c| Some(c))
   }
 
-  fn parse_optical_density(&mut self) -> Result<Option<f64>, ParseError> {
+  fn parse_optical_density(&mut self) -> Result<Option<f32>, ParseError> {
     match self.peek() {
       Some("Ni") => {}
       _ => return Ok(None),
     }
 
     self.parse_tag("Ni")?;
-    let optical_density = self.parse_f64()?;
+    let optical_density = self.parse_f32()?;
     Ok(Some(optical_density))
   }
 
-  fn parse_dissolve(&mut self) -> Result<f64, ParseError> {
+  fn parse_dissolve(&mut self) -> Result<f32, ParseError> {
     self.parse_tag("d")?;
-    self.parse_f64()
+    self.parse_f32()
   }
 
   fn parse_illumination(&mut self) -> Result<Illumination, ParseError> {
@@ -422,24 +376,24 @@ illum 2"#;
         name: "Material".to_owned(),
         specular_coefficient: 96.078431,
         color_ambient: Color {
-          r: 0.0,
-          g: 0.0,
-          b: 0.0,
+          x: 0.0,
+          y: 0.0,
+          z: 0.0,
         },
         color_diffuse: Color {
-          r: 0.64,
-          g: 0.64,
-          b: 0.64,
+          x: 0.64,
+          y: 0.64,
+          z: 0.64,
         },
         color_specular: Color {
-          r: 0.5,
-          g: 0.5,
-          b: 0.5,
+          x: 0.5,
+          y: 0.5,
+          z: 0.5,
         },
         color_emissive: Some(Color {
-          r: 0.1,
-          g: 0.1,
-          b: 0.1,
+          x: 0.1,
+          y: 0.1,
+          z: 0.1,
         }),
         optical_density: Some(1.0),
         alpha: 1.0,
@@ -450,19 +404,19 @@ illum 2"#;
         name: "None".to_owned(),
         specular_coefficient: 0.0,
         color_ambient: Color {
-          r: 0.0,
-          g: 0.0,
-          b: 0.0,
+          x: 0.0,
+          y: 0.0,
+          z: 0.0,
         },
         color_diffuse: Color {
-          r: 0.8,
-          g: 0.8,
-          b: 0.8,
+          x: 0.8,
+          y: 0.8,
+          z: 0.8,
         },
         color_specular: Color {
-          r: 0.8,
-          g: 0.8,
-          b: 0.8,
+          x: 0.8,
+          y: 0.8,
+          z: 0.8,
         },
         color_emissive: None,
         optical_density: None,
@@ -501,24 +455,24 @@ map_Kd cube-uv-num.png
       name: "Material".to_owned(),
       specular_coefficient: 96.078431,
       color_ambient: Color {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
       },
       color_diffuse: Color {
-        r: 0.64,
-        g: 0.64,
-        b: 0.64,
+        x: 0.64,
+        y: 0.64,
+        z: 0.64,
       },
       color_specular: Color {
-        r: 0.5,
-        g: 0.5,
-        b: 0.5,
+        x: 0.5,
+        y: 0.5,
+        z: 0.5,
       },
       color_emissive: Some(Color {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
       }),
       optical_density: Some(1.0),
       alpha: 1.0,

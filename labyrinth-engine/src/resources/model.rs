@@ -23,22 +23,23 @@ pub enum IndiceType {
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
-    position: [f32; 3],
-    tex_coords: [f32; 2],
-    normal: [f32; 3],
+    pub position: [f32; 3],
+    pub tex_coords: [f32; 2],
+    pub normal: [f32; 3],
 }
 
 implement_vertex!(Vertex, position, tex_coords, normal);
 
 pub struct Mesh {
-    pub material: Option<Shared<Material>>,
+    pub name: String,
+    pub material: Shared<Material>,
     pub buffer: VertexBuffer<Vertex>,
     pub indices: IndiceType,
 }
 
 pub struct Model {
     pub name: String,
-    pub meshes: Vec<Mesh>,
+    pub meshes: Vec<String>,
 }
 
 trait ToCoords {
@@ -76,7 +77,7 @@ impl Model {
 
         for obj in set.objects.iter() {
             let mut meshes = Vec::new();
-            for mesh in obj.geometry.iter() {
+            for (i, mesh) in obj.geometry.iter().enumerate() {
                 let mut vertices = Vec::new();
                 for shape in mesh.shapes.iter() {
                     if let Triangle(a, b, c) = shape.primitive {
@@ -97,13 +98,15 @@ impl Model {
                         }
                     }
                 }
-                meshes.push(Mesh {
-                    material: if let Some(name) = &mesh.material_name {
-                                  Some(context.get_material(name).unwrap()) } 
-                              else { None },
+                let mname = format!("{}{}", obj.name.clone(), i);
+                let mesh = Mesh {
+                    name: mname.clone(),
+                    material: context.get_material(&mesh.material_name.as_ref().unwrap()).unwrap(),
                     buffer: VertexBuffer::new(facade, &vertices).unwrap(),
                     indices: IndiceType::None(NoIndices(PrimitiveType::TrianglesList)),
-                });
+                };
+                meshes.push(mesh.name.clone());
+                context.meshes.insert(mesh.name.clone(), Rc::new(RefCell::new(mesh)));
             }
             models.push(Model {
                 name: obj.name.clone(),

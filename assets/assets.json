@@ -1,12 +1,24 @@
 {
     "basetextures": [
         {
+            "name": "ImgNormal",
+            "source": "ImgNormal.png"
+        },
+        {
             "name": "ImgPortal",
             "source": "ImgPortal.png"
         },
         {
             "name": "ImgStone",
             "source": "ImgStone.png"
+        },
+        {
+            "name": "ImgStoneNormal",
+            "source": "ImgStoneNormal.png"
+        },
+        {
+            "name": "ImgPortalNormal",
+            "source": "ImgStoneNormal.png"
         }
     ],
     "basematerials": [
@@ -16,12 +28,19 @@
     ],
     "textures": [
         {
+            "name": "TexNormal",
+            "basetexture": "ImgNormal",
+            "normal": "ImgNormal"
+        },
+        {
             "name": "TexPortal",
-            "basetexture": "ImgPortal"
+            "basetexture": "ImgPortal",
+            "normal": "ImgPortalNormal"
         },
         {
             "name": "TexStone",
-            "basetexture": "ImgStone"
+            "basetexture": "ImgStone",
+            "normal": "ImgStoneNormal"
         }
     ],
     "materials": [
@@ -42,10 +61,54 @@
             "source": "portal.obj"
         }
     ],
+    "shaders": [
+        {
+            "name": "DefaultVertex",
+            "source": "vertex.glsl"
+        },
+        {
+            "name": "DefaultFragment",
+            "source": "fragment.glsl"
+        },
+        {
+            "name": "ShadowVertex",
+            "source": "shadow_vertex.glsl"
+        },
+        {
+            "name": "ShadowFragment",
+            "source": "shadow_fragment.glsl"
+        },
+        {
+            "name": "DebugVertex",
+            "source": "debug_vertex.glsl"
+        },
+        {
+            "name": "DebugFragment",
+            "source": "debug_fragment.glsl"
+        }
+    ],
+    "programs": [
+        {
+            "name": "Default",
+            "vertex": "DefaultVertex",
+            "fragment": "DefaultFragment"
+        },
+        {
+            "name": "Shadow",
+            "vertex": "ShadowVertex",
+            "fragment": "ShadowFragment"
+        },
+        {
+            "name": "Debug",
+            "vertex": "DebugVertex",
+            "fragment": "DebugFragment"
+        }
+    ],
     "objects": [
         {
             "name": "ObjPortal",
-            "model": "ModPortal"
+            "model": "ModPortal",
+            "program": "Default"
         }
     ]
 }

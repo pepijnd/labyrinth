@@ -15,8 +15,8 @@ toml = "0.5.3"
 smallvec = "0.6.10"
 labyrinth-obj = { path = "../labyrinth-obj" }
 labyrinth-glyph = { path = "../labyrinth-glyph"} 
+labyrinth-cgmath = { path = "../labyrinth-cgmath"} 
 glyph_brush = "0.5.3"
 lazy_static = "1.4.0"
-glm = "0.2.3"
 num-traits = "0.2.8"
 json = "0.11.15"

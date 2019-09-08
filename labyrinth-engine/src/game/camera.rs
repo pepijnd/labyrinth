@@ -1,38 +1,39 @@
-use glm::ext::look_at;
-use crate::game::math::Uniform;
+use labyrinth_cgmath::FloatPoint3;
+use labyrinth_cgmath::FloatVec3;
+use labyrinth_cgmath::FloatMat4;
 
 pub struct Camera {
-    position: glm::Vec3,
-    look_at: glm::Vec3,
-    up: glm::Vec3
+    position: FloatPoint3,
+    look_at: FloatPoint3,
+    up: FloatVec3
 }
 
 impl Camera {
     pub fn new() -> Camera {
         Camera {
-            position: glm::vec3(-6.0, 4.0, -4.0),
-            look_at: glm::vec3(0.0, 0.0, 0.0),
-            up: glm::vec3(0.0, 1.0, 0.0)
+            position: FloatPoint3::new(-6.0, 4.0, -4.0),
+            look_at: FloatPoint3::new(0.0, 0.0, 0.0),
+            up: FloatVec3::new(0.0, 1.0, 0.0)
         }
     }
 
-    pub fn get_position(&self) -> glm::Vec3 {
+    pub fn get_position(&self) -> FloatPoint3 {
         self.position
     }
 
-    pub fn get_position_mut(&mut self) -> &mut glm::Vec3 {
+    pub fn get_position_mut(&mut self) -> &mut FloatPoint3 {
         &mut self.position
     }
 
-    pub fn get_look_at(&self) -> glm::Vec3 {
+    pub fn get_look_at(&self) -> FloatPoint3 {
         self.look_at
     }
 
-    pub fn get_up(&self) -> glm::Vec3 {
+    pub fn get_up(&self) -> FloatVec3 {
         self.up
     }
 
-    pub fn make_view(&self) -> [[f32; 4]; 4] {
-        glm::ext::look_at(self.position, self.look_at, self.up).as_uniform()
+    pub fn look_at(&self) -> FloatMat4 {
+        FloatMat4::look_at(self.position, self.look_at, self.up)
     }
 }

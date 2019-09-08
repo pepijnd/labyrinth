@@ -13,5 +13,8 @@ repository  = "https://github.com/PistonDevelopers/wavefront_obj.git"
 homepage    = "https://github.com/PistonDevelopers/wavefront_obj"
 edition = "2018"
 
+[dependencies.labyrinth-cgmath]
+path = "../labyrinth-cgmath"
+
 [dependencies]
 lexical = "2.1.0"
