@@ -16,6 +16,10 @@ use crate::game::context::SharedContext;
 use crate::game::context::LabyrinthContext;
 use crate::game::context::Shared;
 
+use labyrinth_cgmath::FloatVec2;
+use labyrinth_cgmath::FloatVec3;
+use labyrinth_cgmath::prelude::*;
+
 pub enum IndiceType {
     None(NoIndices),
     Buffer(IndexBuffer<u32>),
@@ -26,9 +30,11 @@ pub struct Vertex {
     pub position: [f32; 3],
     pub tex_coords: [f32; 2],
     pub normal: [f32; 3],
+    pub tangent: [f32; 3],
+    pub bitangent: [f32; 3]
 }
 
-implement_vertex!(Vertex, position, tex_coords, normal);
+implement_vertex!(Vertex, position, tex_coords, normal, tangent, bitangent);
 
 pub struct Mesh {
     pub name: String,
@@ -81,6 +87,25 @@ impl Model {
                 let mut vertices = Vec::new();
                 for shape in mesh.shapes.iter() {
                     if let Triangle(a, b, c) = shape.primitive {
+                        let v0 = labyrinth_cgmath::FloatVec3::from(obj.vertices[a.0].to_coords());
+                        let v1 = labyrinth_cgmath::FloatVec3::from(obj.vertices[b.0].to_coords());
+                        let v2 = labyrinth_cgmath::FloatVec3::from(obj.vertices[c.0].to_coords());
+
+                        let uv0 = labyrinth_cgmath::FloatVec2::from(obj.tex_vertices[a.1.unwrap()].to_coords());
+                        let uv1 = labyrinth_cgmath::FloatVec2::from(obj.tex_vertices[b.1.unwrap()].to_coords());
+                        let uv2 = labyrinth_cgmath::FloatVec2::from(obj.tex_vertices[c.1.unwrap()].to_coords());
+
+                        let dp1 = v1 - v0;
+                        let dp2 = v2 - v0;
+
+                        let duv1 = uv1 - uv0;
+                        let duv2 = uv2 - uv0;
+
+                        let r = 1f32 / (duv1.x * duv2.y - duv1.y * duv2.x);
+                        let tangent = ((dp1 * duv2.y - dp2 * duv1.y)*r).normalize();
+                        let bitangent = ((dp2 * duv1.x - dp1 * duv2.x)*r).normalize();
+                        let normal = (v1-v0).cross(v2-v0).normalize();
+
                         for (vindex, tindex, nindex) in [a, b, c].iter() {
                             vertices.push(Vertex {
                                 position: obj.vertices[*vindex].to_coords(),
@@ -89,11 +114,9 @@ impl Model {
                                 } else {
                                     [0.0, 0.0]
                                 },
-                                normal: if let Some(index) = nindex {
-                                    obj.normals[*index].to_coords()
-                                } else {
-                                    [0.0, 0.0, 0.0]
-                                },
+                                normal: normal.into(),
+                                tangent: tangent.into(),
+                                bitangent: bitangent.into()
                             })
                         }
                     }
@@ -101,7 +124,7 @@ impl Model {
                 let mname = format!("{}{}", obj.name.clone(), i);
                 let mesh = Mesh {
                     name: mname.clone(),
-                    material: context.get_material(&mesh.material_name.as_ref().unwrap()).unwrap(),
+                    material: context.get_material(&mesh.material_name.clone().unwrap()).unwrap(),
                     buffer: VertexBuffer::new(facade, &vertices).unwrap(),
                     indices: IndiceType::None(NoIndices(PrimitiveType::TrianglesList)),
                 };

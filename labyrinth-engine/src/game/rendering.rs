@@ -16,6 +16,7 @@ use labyrinth_cgmath::{
     FloatVec3
 };
 use labyrinth_cgmath::prelude::*;
+use labyrinth_cgmath::Rad;
 
 use crate::resources::material::BaseMatUniform;
 use crate::resources::material::BaseMaterial;
@@ -183,11 +184,11 @@ impl<'a> Renderer<'a> {
 
         {
             let mut context = context.borrow_mut();
-            context.t += 0.02;
+            context.t += 0.0075;
         }
 
         let shadow_map = self.shadow_map.get_or_insert_with(|| {
-            glium::texture::DepthTexture2d::empty(facade, 1024, 1024).unwrap()
+            glium::texture::DepthTexture2d::empty(facade, 2096, 2096).unwrap()
         });
 
         let mut buffer = RenderBuffer::new();
@@ -201,32 +202,21 @@ impl<'a> Renderer<'a> {
         
         let context = context.borrow();
 
-        let screen_dims = target.get_dimensions();
-        brush.queue(VariedSection {
-            text: vec![SectionText {
-                text: format!("fps: {:.1}", self.counter.get_rate()).as_str(),
-                color: [1.0, 1.0, 1.0, 1.0],
-                ..Default::default()
-            }],
-            bounds: (screen_dims.0 as f32, screen_dims.1 as f32),
-            ..Default::default()
-        });
-        brush.draw_queued(facade, target);
-
         let mut camera = Camera::new();
-        *camera.get_position_mut() = FloatPoint3::new(3.5, 1.5, 2.2);
+        *camera.get_position_mut() = FloatPoint3::new(2.5, 2.5, 3.2);
+        *camera.get_look_at_mut() = FloatPoint3::new(0.0, 0.5, 0.0);
 
         let mut light = Light::new(
-            FloatVec3::new(context.t.sin()*3.0, 2.0, context.t.cos()*3.0), 
-            FloatVec3::new(0.0, 0.0, 0.0), 
-            FloatVec3::new(1.0, 0.95, 0.7)
+            FloatVec3::new(context.t.sin()*8.0, 8.0, context.t.cos()*8.0), 
+            FloatVec3::new(0.0, 1.0, 0.0), 
+            FloatVec3::new(1.0, 0.95, 0.9)
         );
         let lightmap = glium::uniforms::UniformBuffer::new(facade, LightMap::new(light)).unwrap();
 
 
 
-        let w = 5.0;
-        let dpm = labyrinth_cgmath::ortho(-w, w, -w, w, -10.0, 20.0);
+        let w = 4.0;
+        let dpm = labyrinth_cgmath::perspective(Rad::full_turn()/8.0, 1.0, 2.0, 50.0);
         let dvm = labyrinth_cgmath::Matrix4::look_at(
             FloatPoint3::from_vec(light.position), 
             FloatPoint3::from_vec(light.center), 
@@ -235,10 +225,11 @@ impl<'a> Renderer<'a> {
 
         let params = glium::DrawParameters {
                 depth: glium::Depth {
-                    test: glium::draw_parameters::DepthTest::IfLessOrEqual,
+                    test: glium::draw_parameters::DepthTest::IfLess,
                     write: true,
                     .. Default::default()
                 },
+                backface_culling: glium::draw_parameters::BackfaceCullingMode::CullClockwise,
                 .. Default::default()
             };
 
@@ -330,7 +321,7 @@ impl<'a> Renderer<'a> {
 					.magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
 					.minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
                     .depth_texture_comparison(Some(glium::uniforms::DepthTextureComparison::LessOrEqual)),
-                normal: &*normal,
+                normal_map: &*normal,
                 view: camera.look_at(),
                 camera_pos: camera.get_position(),
                 matmap: &material,
@@ -344,22 +335,34 @@ impl<'a> Renderer<'a> {
                 &params).unwrap();
         }
 
-        let debug = make_debug(facade);
-        let uniforms = uniform!(
-            tex: glium::uniforms::Sampler::new(&*shadow_map)
-                    .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
-                    .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
-        );
-        let program = context.get_program(&"Debug".to_owned()).unwrap();
-        let program = program.borrow();
-        target.clear_depth(1.0);
-        target.draw(
-            &debug.0,
-            &debug.1,
-            &program.program,
-            &uniforms,
-            &Default::default()
-        ).unwrap();
+        // let debug = make_debug(facade);
+        // let uniforms = uniform!(
+        //     tex: glium::uniforms::Sampler::new(&*shadow_map)
+        //             .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
+        //             .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
+        // );
+        // let program = context.get_program(&"Debug".to_owned()).unwrap();
+        // let program = program.borrow();
+        // target.clear_depth(1.0);
+        // target.draw(
+        //     &debug.0,
+        //     &debug.1,
+        //     &program.program,
+        //     &uniforms,
+        //     &Default::default()
+        // ).unwrap();
+
+        let screen_dims = target.get_dimensions();
+        brush.queue(VariedSection {
+            text: vec![SectionText {
+                text: format!("fps: {:.1}", self.counter.get_rate()).as_str(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                ..Default::default()
+            }],
+            bounds: (screen_dims.0 as f32, screen_dims.1 as f32),
+            ..Default::default()
+        });
+        brush.draw_queued(facade, target);
 
         self.counter.count(|| {});
     }

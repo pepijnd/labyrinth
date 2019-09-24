@@ -34,9 +34,9 @@ impl Entity {
         let object = object.borrow();
         let buffers = object.render_command(shared);
         for mut command in buffers {
-            command.matrix = FloatMat4::from_scale(self.scale) * 
-                             FloatMat4::from_angle_y(self.rotation) * 
-                             FloatMat4::from_translation(self.position);
+            command.matrix = FloatMat4::from_translation(self.position) *
+                             FloatMat4::from_angle_y(self.rotation) *
+                             FloatMat4::from_scale(self.scale);
             buffer.push(command);
         }
     }

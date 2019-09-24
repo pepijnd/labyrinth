@@ -58,77 +58,27 @@ impl Runner {
         let mut path = std::env::current_dir().unwrap();
         path.push(std::path::Path::new("assets/assets.json"));
 
-        loader.load_file(&display, std::fs::File::open(std::path::Path::new(path.as_path())).unwrap());
 
         use crate::resources::material::BaseMaterial;
         use crate::resources::material::Illumination;
         
         loader.load_basematerial(BaseMaterial {
             name: "MatNormal".to_owned(),
-            specular_coefficient: 300.0,
-            color_ambient: FloatVec3::new(0.5, 0.5, 0.5),
-            color_diffuse: FloatVec3::new(0.5, 0.5, 0.5),
+            specular_coefficient: 500.0,
+            color_ambient: FloatVec3::new(0.1, 0.1, 0.1),
+            color_diffuse: FloatVec3::new(0.8, 0.8, 0.8),
             color_specular: FloatVec3::new(0.0, 0.0, 0.0),
             color_emissive: FloatVec3::new(0.0, 0.0, 0.0),
             optical_density: 0.0,
             alpha: 1.0,
             illumination: Illumination::AmbientDiffuseSpecular
         });
-
-        let material = Material {
-            name: "MatNormal".to_owned(),
-            basematerial: context.borrow().get_basematerial(&"MatNormal".to_owned()).unwrap(),
-            texture: context.borrow().get_texture(&"TexNormal".to_owned()).unwrap()
-        };
-        loader.load_material(material);
+        
+        loader.load_file(&display, std::fs::File::open(std::path::Path::new(path.as_path())).unwrap());
 
         use crate::resources::model::{
             Mesh, Vertex
         };
-        let vertices = glium::VertexBuffer::new(&display, &vec![
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [-1.0, 0.0, -1.0],
-                tex_coords: [0.0, 0.0]
-            },
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [1.0, 0.0, -1.0],
-                tex_coords: [1.0, 0.0]
-            },
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [-1.0, 0.0, 1.0],
-                tex_coords: [0.0, 1.0]
-            },
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [-1.0, 0.0, 1.0],
-                tex_coords: [0.0, 1.0]
-            },
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [1.0, 0.0, -1.0],
-                tex_coords: [1.0, 0.0]
-            },
-            Vertex {
-                normal: [0.0, 1.0, 0.0],
-                position: [1.0, 0.0, 1.0],
-                tex_coords: [1.0, 1.0]
-            }
-        ]).unwrap();
-        let mesh = Mesh {
-            name: "MeshFloor".to_owned(),
-            buffer: vertices,
-            indices: crate::resources::model::IndiceType::None(glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList)),
-            material: context.borrow().get_material(&"MatNormal".to_owned()).unwrap()
-        };
-        context.borrow_mut().meshes.insert("MeshFloor".to_owned(), std::rc::Rc::new(std::cell::RefCell::new(mesh)));
-
-        loader.load_model(Model {
-            name: "ModFloor".to_owned(),
-            meshes: vec!["MeshFloor".to_owned()]
-        });
 
         let object = Object {
             name: "ObjFloor".to_owned(),

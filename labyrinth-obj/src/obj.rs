@@ -8,7 +8,8 @@ use std::mem;
 use crate::lex::{Lexer, ParseError};
 use crate::util::OrderingExt;
 
-
+use labyrinth_cgmath::FloatVec3;
+use labyrinth_cgmath::FloatVec2;
 
 /// A set of objects, as listed in an `.obj` file.
 #[derive(Clone, Debug, PartialEq)]
@@ -84,9 +85,21 @@ pub enum Primitive {
 #[allow(missing_docs)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
-  pub x: f64,
-  pub y: f64,
-  pub z: f64,
+  pub x: f32,
+  pub y: f32,
+  pub z: f32,
+}
+
+impl Into<(f32, f32, f32)> for Vertex {
+  fn into(self) -> (f32, f32, f32) {
+    (self.x, self.y, self.z)
+  }
+}
+
+impl Into<FloatVec3> for Vertex {
+  fn into(self) -> FloatVec3 {
+    FloatVec3::new(self.x, self.y, self.z)
+  }
 }
 
 /// A single 3-dimensional normal
@@ -96,12 +109,36 @@ pub type Normal = Vertex;
 #[allow(missing_docs)]
 #[derive(Clone, Copy, Debug)]
 pub struct TVertex {
-  pub u: f64,
-  pub v: f64,
-  pub w: f64,
+  pub u: f32,
+  pub v: f32,
+  pub w: f32,
 }
 
-fn fuzzy_cmp(a: f64, b: f64, delta: f64) -> Ordering {
+impl Into<(f32, f32, f32)> for TVertex {
+  fn into(self) -> (f32, f32, f32) {
+    (self.u, self.v, self.w)
+  }
+}
+
+impl Into<FloatVec3> for TVertex {
+  fn into(self) -> FloatVec3 {
+    FloatVec3::new(self.u, self.v, self.w)
+  }
+}
+
+impl Into<(f32, f32)> for TVertex {
+  fn into(self) -> (f32, f32) {
+    (self.u, self.v)
+  }
+}
+
+impl Into<FloatVec2> for TVertex {
+  fn into(self) -> FloatVec2 {
+    FloatVec2::new(self.u, self.v)
+  }
+}
+
+fn fuzzy_cmp(a: f32, b: f32, delta: f32) -> Ordering {
   if (a - b).abs() <= delta {
     Equal
   } else if a < b {
@@ -357,30 +394,28 @@ impl<'a> Parser<'a> {
     }
   }
 
-  // TODO(cgaebel): Should this be returning `num::rational::BigRational` instead?
-  // I can't think of a good reason to do this except to make testing easier.
-  fn parse_double(&mut self) -> Result<f64, ParseError> {
+  fn parse_float(&mut self) -> Result<f32, ParseError> {
     let s = self.parse_str()?;
-    lexical::try_parse(s).map_err(|_| self.error_raw(format!("Expected f64 but got {}.", s)))
+    lexical::try_parse(s).map_err(|_| self.error_raw(format!("Expected f32 but got {}.", s)))
   }
 
   fn parse_vertex(&mut self) -> Result<Vertex, ParseError> {
     self.parse_tag("v")?;
 
-    let x = self.parse_double()?;
-    let y = self.parse_double()?;
-    let z = self.parse_double()?;
+    let x = self.parse_float()?;
+    let y = self.parse_float()?;
+    let z = self.parse_float()?;
 
     Ok(Vertex { x: x, y: y, z: z })
   }
 
   fn parse_tex_vertex(&mut self) -> Result<TVertex, ParseError> {
     self.parse_tag("vt")?;
-    let u = self.parse_double()?;
+    let u = self.parse_float()?;
 
-    match self.attempt(Self::parse_double) {
+    match self.attempt(Self::parse_float) {
       Some(v) => {
-        let w = self.attempt(Self::parse_double).unwrap_or(0.);
+        let w = self.attempt(Self::parse_float).unwrap_or(0.);
         Ok(TVertex { u: u, v: v, w: w })
       }
       None => Ok(TVertex { u: u, v: 0., w: 0. }),
@@ -390,9 +425,9 @@ impl<'a> Parser<'a> {
   fn parse_normal(&mut self) -> Result<Normal, ParseError> {
     self.parse_tag("vn")?;
 
-    let x = self.parse_double()?;
-    let y = self.parse_double()?;
-    let z = self.parse_double()?;
+    let x = self.parse_float()?;
+    let y = self.parse_float()?;
+    let z = self.parse_float()?;
 
     Ok(Normal { x: x, y: y, z: z })
   }
@@ -853,9 +888,9 @@ f 45 41 44 48"#;
         ]
         .into_iter()
         .map(|(x, y, z)| Vertex {
-          x: x as f64,
-          y: y as f64,
-          z: z as f64,
+          x: x as f32,
+          y: y as f32,
+          z: z as f32,
         })
         .collect(),
         tex_vertices: vec![],
@@ -1075,9 +1110,9 @@ f 5/5 1/13 4/14 8/6"#;
       ]
       .into_iter()
       .map(|(x, y, z)| Vertex {
-        x: x as f64,
-        y: y as f64,
-        z: z as f64,
+        x: x as f32,
+        y: y as f32,
+        z: z as f32,
       })
       .collect(),
       tex_vertices: vec![
@@ -1189,9 +1224,9 @@ f 5/5 1/13 4/14 8/6"#;
       ]
       .into_iter()
       .map(|(x, y, z)| Vertex {
-        x: x as f64,
-        y: y as f64,
-        z: z as f64,
+        x: x as f32,
+        y: y as f32,
+        z: z as f32,
       })
       .collect(),
       tex_vertices: vec![
@@ -1304,9 +1339,9 @@ f 5/5 1/13 4/14 8/6"#;
       ]
       .into_iter()
       .map(|(x, y, z)| Vertex {
-        x: x as f64,
-        y: y as f64,
-        z: z as f64,
+        x: x as f32,
+        y: y as f32,
+        z: z as f32,
       })
       .collect(),
       tex_vertices: vec![
@@ -1408,9 +1443,9 @@ f 5/5 1/13 4/14 8/6
       ]
       .into_iter()
       .map(|(x, y, z)| Vertex {
-        x: x as f64,
-        y: y as f64,
-        z: z as f64,
+        x: x as f32,
+        y: y as f32,
+        z: z as f32,
       })
       .collect(),
       tex_vertices: vec![

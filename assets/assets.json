@@ -5,6 +5,10 @@
             "source": "ImgNormal.png"
         },
         {
+            "name": "ImgDefault",
+            "source": "ImgDefault.png"
+        },
+        {
             "name": "ImgPortal",
             "source": "ImgPortal.png"
         },
@@ -19,18 +23,48 @@
         {
             "name": "ImgPortalNormal",
             "source": "ImgStoneNormal.png"
+        },
+        {
+            "name": "ImgBlock",
+            "source": "ImgBlock.png"
+        },
+        {
+            "name": "ImgBlockNormal",
+            "source": "ImgBlockNormal.png"
+        },
+        {
+            "name": "ImgTorch",
+            "source": "MatTorch.png"
+        },
+        {
+            "name": "ImgTorchNormal",
+            "source": "MatTorchNormal.png"
+        },
+        {
+            "name": "ImgBall",
+            "source": "MatBall.png"
+        },
+        {
+            "name": "ImgBallNormal",
+            "source": "MatBallNormal.png"
         }
     ],
     "basematerials": [
         {
             "source": "portal.mtl"
+        },
+        {
+            "source": "block.mtl"
+        },
+        {
+            "source": "torch.mtl"
         }
     ],
     "textures": [
         {
             "name": "TexNormal",
-            "basetexture": "ImgNormal",
-            "normal": "ImgNormal"
+            "basetexture": "ImgDefault",
+            "normal": "ImgDefault"
         },
         {
             "name": "TexPortal",
@@ -41,6 +75,21 @@
             "name": "TexStone",
             "basetexture": "ImgStone",
             "normal": "ImgStoneNormal"
+        },
+        {
+            "name": "TexBlock",
+            "basetexture": "ImgBlock",
+            "normal": "ImgBlockNormal"
+        },
+        {
+            "name": "TexTorch",
+            "basetexture": "ImgTorch",
+            "normal": "ImgTorchNormal"
+        },
+        {
+            "name": "TexBall",
+            "basetexture": "ImgBall",
+            "normal": "ImgBallNormal"
         }
     ],
     "materials": [
@@ -53,12 +102,44 @@
             "name": "MatStone",
             "basematerial": "MatStone",
             "texture": "TexStone"
+        },
+        {
+            "name": "None",
+            "basematerial": "MatNormal",
+            "texture": "TexNormal"
+        },
+        {
+            "name": "MatBlock",
+            "basematerial": "MatBlock",
+            "texture": "TexBlock"
+        },
+        {
+            "name": "MatTorch",
+            "basematerial": "MatTorch",
+            "texture": "TexTorch"
+        },
+        {
+            "name": "MatBall",
+            "basematerial": "MatBall",
+            "texture": "TexBall"
         }
     ],
     "models": [
         {
             "name": "ModPortal",
             "source": "portal.obj"
+        },
+        {
+            "name": "ModFloor",
+            "source": "floor.obj"
+        },
+        {
+            "name": "ModBlock",
+            "source": "block.obj"
+        },
+        {
+            "name": "ModTorch",
+            "source": "torch.obj"
         }
     ],
     "shaders": [
@@ -108,6 +189,16 @@
         {
             "name": "ObjPortal",
             "model": "ModPortal",
+            "program": "Default"
+        },
+        {
+            "name": "ObjBlock",
+            "model": "ModBlock",
+            "program": "Default"
+        },
+        {
+            "name": "ObjTorch",
+            "model": "ModTorch",
             "program": "Default"
         }
     ]

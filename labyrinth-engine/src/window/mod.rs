@@ -14,7 +14,9 @@ impl Window {
         let event_loop = glutin::event_loop::EventLoop::with_user_event();
         let context = glutin::ContextBuilder::new()
             .with_vsync(true)
-            .with_depth_buffer(24);
+            .with_depth_buffer(24)
+            .with_multisampling(4)
+            .with_srgb(true);
         let mut builder = glutin::window::WindowBuilder::new().with_title("Labyrinth");
         if let Some(size) = settings.size {
             builder = builder.with_inner_size(size.into());

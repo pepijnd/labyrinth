@@ -29,6 +29,10 @@ impl Camera {
         self.look_at
     }
 
+    pub fn get_look_at_mut(&mut self) -> &mut FloatPoint3 {
+        &mut self.look_at
+    }
+
     pub fn get_up(&self) -> FloatVec3 {
         self.up
     }
