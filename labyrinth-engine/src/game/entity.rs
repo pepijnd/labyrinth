@@ -1,23 +1,22 @@
-use crate::game::context::SharedContext;
+use crate::game::context::LabyrinthContext;
 use crate::game::rendering::RenderBuffer;
 use crate::labyrinth_cgmath::Zero;
-use labyrinth_cgmath::{
-    FloatMat4,
-    FloatVec3,
-    Rad,
-};
+use labyrinth_cgmath::{FloatMat4, FloatVec3, Rad};
+
+use crate::resources::object::ObjectBuffer;
+use generational_arena::Index;
 
 #[derive(Clone)]
 pub struct Entity {
     pub name: String,
-    pub object: String,
+    pub object: Index,
     pub position: FloatVec3,
     pub scale: f32,
-    pub rotation: Rad<f32>
+    pub rotation: Rad<f32>,
 }
 
 impl Entity {
-    pub fn new(name: String, object: String) -> Entity {
+    pub fn new(name: String, object: Index) -> Entity {
         Entity {
             name,
             object,
@@ -27,16 +26,13 @@ impl Entity {
         }
     }
 
-    pub fn render_queue(&self, context: SharedContext, buffer: &mut RenderBuffer) {
-        let shared = context.clone();
-        let context = context.borrow();
-        let object = context.get_object(&self.object).unwrap();
-        let object = object.borrow();
-        let buffers = object.render_command(shared);
+    pub fn render_queue(&self, context: &LabyrinthContext, buffer: &mut RenderBuffer) {
+        let object = ObjectBuffer::get(context, self.object).unwrap();
+        let buffers = object.render_command(context);
         for mut command in buffers {
-            command.matrix = FloatMat4::from_translation(self.position) *
-                             FloatMat4::from_angle_y(self.rotation) *
-                             FloatMat4::from_scale(self.scale);
+            command.matrix = FloatMat4::from_translation(self.position)
+                * FloatMat4::from_angle_y(self.rotation)
+                * FloatMat4::from_scale(self.scale);
             buffer.push(command);
         }
     }

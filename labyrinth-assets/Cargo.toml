@@ -1,0 +1,15 @@
+[package]
+name = "labyrinth-assets"
+version = "0.1.0"
+authors = ["Pepijn Dragt <pepijn.dragt@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+labyrinth-cgmath = { path = "../labyrinth-cgmath", features = ["serde"]} 
+serde_json = "1.0.40"
+serde = "1.0.101"
+bincode = "1.1.4"
+itertools = "0.8.0"
+glium = ">= 0.26.0-alpha3"

@@ -1,119 +1,138 @@
-pub use labyrinth_obj::mtl::Illumination;
-use labyrinth_obj::mtl;
+use crate::game::context::LabyrinthContext;
+use glium::backend::Facade;
 
-use crate::resources::texture::Texture;
-use crate::game::context::Shared;
+use labyrinth_assets::assets::{Effect, Material};
 
 use labyrinth_cgmath::FloatVec3;
 
-pub struct Material {
+use generational_arena::Index;
+
+pub struct MaterialBuffer {
     pub name: String,
-    pub basematerial: Shared<BaseMaterial>,
-    pub texture: Shared<Texture>
+    pub effect: Index,
+    //pub texture: Shared<Texture>,
 }
 
-impl Material {
-    pub fn new(name: String, basematerial: Shared<BaseMaterial>, texture: Shared<Texture>) -> Material {
-        Material {
-            name,
-            basematerial,
-            texture
-        }
-    }
-
-    pub fn to_uniform(&self) -> MatUnfiform {
-        MatUnfiform {
-            base: self.basematerial.borrow().to_uniform()
-        }
-    }
+#[derive(Clone)]
+pub struct EffectBuffer {
+    pub name: String,
+    pub emission: FloatVec3,
+    pub ambient: FloatVec3,
+    pub diffuse: FloatVec3,
+    pub specular: FloatVec3,
+    pub shininess: f32,
+    pub refraction: f32,
+    pub alpha: f32,
 }
 
 #[derive(Copy, Clone)]
 pub struct MatUnfiform {
-    pub base: BaseMatUniform
-}
-
-#[derive(Clone)]
-pub struct BaseMaterial {
-    pub name: String,
-    pub specular_coefficient: f32,
-    pub color_ambient: FloatVec3,
-    pub color_diffuse: FloatVec3,
-    pub color_specular: FloatVec3,
-    pub color_emissive: FloatVec3,
-    pub optical_density: f32,
-    pub alpha: f32,
-    pub illumination: Illumination
+    pub effect: EffectUniform,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct BaseMatUniform {
-    pub specular_coefficient: f32,
-    _pad1: [f32; 3],
-    pub color_ambient: FloatVec3,
+pub struct EffectUniform {
+    pub emission: FloatVec3,
+    _pad1: [f32; 1],
+    pub ambient: FloatVec3,
     _pad2: [f32; 1],
-    pub color_diffuse: FloatVec3,
+    pub diffuse: FloatVec3,
     _pad3: [f32; 1],
-    pub color_specular: FloatVec3,
-    _pad4: [f32; 1],
-    pub color_emissive: FloatVec3,
-    pub optical_density: f32,
-    pub alpha: f32
+    pub specular: FloatVec3,
+    _pad4: [f32; 3],
+    pub shininess: f32,
+    pub refraction: f32,
+    pub alpha: f32,
 }
 
-implement_uniform_block!(BaseMatUniform, 
-specular_coefficient, 
-color_ambient, 
-color_diffuse, 
-color_specular, 
-color_emissive, 
-optical_density,
-alpha);
+implement_uniform_block!(
+    EffectUniform,
+    emission,
+    ambient,
+    diffuse,
+    specular,
+    shininess,
+    refraction,
+    alpha
+);
 
-implement_uniform_block!(MatUnfiform, base);
+implement_uniform_block!(MatUnfiform, effect);
 
-impl BaseMaterial {
-    pub fn load<R>(mut file: R) -> Vec<BaseMaterial>
+impl MaterialBuffer {
+    pub fn load<F>(material: &Material, _facade: &F, context: &mut LabyrinthContext) -> Index
     where
-        R: std::io::Read
+        F: Facade,
     {
-        let mut material = String::new();
-        file.read_to_string(&mut material).unwrap();
-        let set = labyrinth_obj::mtl::parse(material).unwrap();
-
-        let mut materials = Vec::new();
-        for material in set.materials.iter() {
-            materials.push(
-                BaseMaterial {
-                    name: material.name.clone(),
-                    specular_coefficient: material.specular_coefficient,
-                    color_ambient: material.color_ambient,
-                    color_diffuse: material.color_diffuse,
-                    color_specular: material.color_specular,
-                    color_emissive: material.color_emissive.unwrap_or(FloatVec3::new(0.0, 0.0, 0.0)),
-                    optical_density:material.optical_density.unwrap_or(0.0),
-                    alpha: material.alpha,
-                    illumination: material.illumination
-                }
-            )
-        }
-        materials
+        let buffer = MaterialBuffer {
+            name: material.name.clone(),
+            effect: EffectBuffer::find(context, &material.effect).unwrap(),
+        };
+        context.materials.insert(buffer)
     }
 
-    pub fn to_uniform(&self) -> BaseMatUniform {
-        BaseMatUniform {
-            specular_coefficient: self.specular_coefficient,
-            _pad1: [0f32; 3],
-            color_ambient: self.color_ambient,
+    pub fn get(context: &LabyrinthContext, index: Index) -> Option<&MaterialBuffer> {
+        context.materials.get(index)
+    }
+
+    pub fn find(context: &LabyrinthContext, name: &str) -> Option<Index> {
+        match context.materials.iter().find(|x| x.1.name == name) {
+            Some(n) => Some(n.0),
+            None => None,
+        }
+    }
+
+    pub fn to_uniform(&self, context: &LabyrinthContext) -> MatUnfiform {
+        MatUnfiform {
+            effect: EffectBuffer::get(context, self.effect)
+                .unwrap()
+                .to_uniform(),
+        }
+    }
+}
+
+impl EffectBuffer {
+    pub fn load<F>(effect: &Effect, _facade: &F, context: &mut LabyrinthContext) -> Index
+    where
+        F: Facade,
+    {
+        let buffer = EffectBuffer {
+            name: effect.name.clone(),
+            emission: effect.emission.into(),
+            ambient: effect.ambient.into(),
+            diffuse: effect.diffuse.into(),
+            specular: effect.specular.into(),
+            shininess: effect.shininess,
+            refraction: effect.refraction,
+            alpha: effect.alpha,
+        };
+        context.effects.insert(buffer)
+    }
+
+    pub fn get(context: &LabyrinthContext, index: Index) -> Option<&EffectBuffer> {
+        context.effects.get(index)
+    }
+
+    pub fn find(context: &LabyrinthContext, name: &str) -> Option<Index> {
+        match context.effects.iter().find(|x| x.1.name == name) {
+            Some(n) => Some(n.0),
+            None => None,
+        }
+    }
+
+    pub fn to_uniform(&self) -> EffectUniform {
+        EffectUniform {
+            emission: self.emission,
+            _pad1: [0f32; 1],
+            ambient: self.ambient,
             _pad2: [0f32; 1],
-            color_diffuse: self.color_diffuse,
+            diffuse: self.diffuse,
             _pad3: [0f32; 1],
-            color_specular: self.color_specular,
-            _pad4: [0f32; 1],
-            color_emissive: self.color_emissive,
-            optical_density: self.optical_density,
-            alpha: self.alpha
+            specular: self.specular,
+            _pad4: [0f32; 3],
+            shininess: self.shininess,
+            refraction: self.refraction,
+            alpha: self.alpha,
         }
     }
 }

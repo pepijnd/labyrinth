@@ -1,37 +1,42 @@
-use crate::game::context::Shared;
-use crate::game::context::SharedContext;
+use crate::game::context::LabyrinthContext;
 
+use glium::backend::Facade;
 
-pub struct Shader {
+use generational_arena::Index;
+
+use labyrinth_assets::assets::Program;
+
+pub struct ProgramBuffer {
     pub name: String,
-    pub source: String
+    pub program: glium::Program,
 }
 
-impl Shader {
-    pub fn new(name: String, source: String) -> Shader {
-        Shader {
-            name,
-            source
-        }
+impl ProgramBuffer {
+    pub fn load<F>(program: &Program, facade: &F, context: &mut LabyrinthContext) -> Index
+    where
+        F: Facade,
+    {
+        let buffer = ProgramBuffer {
+            name: program.name.clone(),
+            program: glium::Program::from_source(
+                facade,
+                &program.vertex.code,
+                &program.fragment.code,
+                None,
+            )
+            .unwrap(),
+        };
+        context.programs.insert(buffer)
     }
-}
 
-pub struct Program {
-    pub name: String,
-    pub program: glium::Program
-}
+    pub fn get(context: &LabyrinthContext, index: Index) -> Option<&ProgramBuffer> {
+        context.programs.get(index)
+    }
 
-impl Program {
-    pub fn new<F>(name: String, facade: &F, context: SharedContext, vertex: Shared<Shader>, fragment: Shared<Shader>, geometry: Option<Shared<Shader>>) -> Program where F: glium::backend::Facade {
-        let vertex_source = vertex.borrow();
-        let vertex = vertex_source.source.as_str();
-        let fragment_source = fragment.borrow();
-        let fragment = fragment_source.source.as_str();
-        let geometry_source = geometry.as_ref().map(|x| x.borrow());
-        let geometry = geometry_source.as_ref().map(|x| x.source.as_str());
-        Program {
-            name,
-            program: glium::Program::from_source(facade, vertex, fragment, geometry).unwrap()
+    pub fn find(context: &LabyrinthContext, name: &str) -> Option<Index> {
+        match context.programs.iter().find(|x| x.1.name == name) {
+            Some(n) => Some(n.0),
+            None => None,
         }
     }
 }

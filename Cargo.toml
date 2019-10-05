@@ -3,41 +3,29 @@ name = "labyrinth"
 version = "0.1.0"
 authors = ["Pepijn Dragt <pepijn.dragt@gmail.com>"]
 edition = "2018"
-default-run = "labyrinth-game"
 
 [dependencies]
-labyrinth-obj = { path = "./labyrinth-obj" }
-labyrinth-cgmath = { path = "./labyrinth-cgmath"} 
+labyrinth-engine = { path = "./labyrinth-engine" } 
+labyrinth-cgmath = { path = "./labyrinth-cgmath" } 
+labyrinth-assets = { path = "./labyrinth-assets" } 
+labyrinth-collada = { path = "./labyrinth-collada" } 
 serde = { version = "1.0.101", features = ["derive"] }
 serde_json = "1.0.40"
 bincode = "1.1.4"
 itertools = "0.8.0"
-
-
-[dependencies.labyrinth-engine]
-path = "./labyrinth-engine"
+clap = "2.33.0"
 
 [workspace]
 members = [
   ".",
   "labyrinth-engine",
   "labyrinth-glyph",
-  "labyrinth-obj",
-  "labyrinth-cgmath"
+  "labyrinth-cgmath",
+  "labyrinth-assets",
+  "labyrinth-collada",
 ]
-
-[[bin]]
-name = "labyrinth-game"
-path = "src/game.rs"
-
-[[bin]]
-name = "labyrinth-convert"
-path = "src/convert.rs"
-
-[profile.dev]
-opt-level = 1
 
 [profile.release]
 debug = false
-#lto = true
-#codegen-units = 1
+lto = true
+codegen-units = 1

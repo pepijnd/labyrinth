@@ -1,11 +1,10 @@
-use std::cell::RefCell;
 use std::sync::{Arc, RwLock};
 
 use glutin::event_loop::{ControlFlow, EventLoopWindowTarget};
 
 use glutin::event::Event as GlutinEvent;
 
-use glutin::event::{StartCause, WindowEvent};
+use glutin::event::WindowEvent;
 
 use glium::Surface;
 
@@ -15,13 +14,8 @@ pub use event::Event;
 use crate::game::context::SharedContext;
 use crate::game::rendering::Renderer;
 use crate::game::Game;
-use crate::resources::model::Model;
-use crate::window::Window;
 use crate::resources::loader::ResourceLoader;
-use crate::resources::texture::Texture;
-use crate::resources::material::Material;
-use crate::game::object::Object;
-use labyrinth_cgmath::FloatVec3;
+use crate::window::Window;
 
 pub struct Runner {
     window: Window,
@@ -31,7 +25,12 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub fn new(window: Window, game: Game, loader: ResourceLoader, context: SharedContext) -> Runner {
+    pub fn new(
+        window: Window,
+        game: Game,
+        loader: ResourceLoader,
+        context: SharedContext,
+    ) -> Runner {
         Runner {
             window,
             game,
@@ -44,7 +43,7 @@ impl Runner {
         let Runner {
             window,
             game,
-            mut loader,
+            loader,
             context,
         } = self;
 
@@ -55,37 +54,7 @@ impl Runner {
         let game = Arc::new(RwLock::new(game));
         let lock = game.clone();
 
-        let mut path = std::env::current_dir().unwrap();
-        path.push(std::path::Path::new("assets/assets.json"));
-
-
-        use crate::resources::material::BaseMaterial;
-        use crate::resources::material::Illumination;
-        
-        loader.load_basematerial(BaseMaterial {
-            name: "MatNormal".to_owned(),
-            specular_coefficient: 500.0,
-            color_ambient: FloatVec3::new(0.1, 0.1, 0.1),
-            color_diffuse: FloatVec3::new(0.8, 0.8, 0.8),
-            color_specular: FloatVec3::new(0.0, 0.0, 0.0),
-            color_emissive: FloatVec3::new(0.0, 0.0, 0.0),
-            optical_density: 0.0,
-            alpha: 1.0,
-            illumination: Illumination::AmbientDiffuseSpecular
-        });
-        
-        loader.load_file(&display, std::fs::File::open(std::path::Path::new(path.as_path())).unwrap());
-
-        use crate::resources::model::{
-            Mesh, Vertex
-        };
-
-        let object = Object {
-            name: "ObjFloor".to_owned(),
-            model: context.borrow().get_model(&"ModFloor".to_owned()).unwrap(),
-            program: context.borrow().get_program(&"Default".to_owned()).unwrap()
-        };
-        loader.load_object(object);
+        loader.load_assets(&display);
 
         std::thread::spawn(move || {
             let mut last_update = std::time::Instant::now();

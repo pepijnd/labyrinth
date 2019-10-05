@@ -1,0 +1,5 @@
+{
+    "name": "shadow",
+    "vertex": "shadow_vertex",
+    "fragment": "shadow_fragment"
+}

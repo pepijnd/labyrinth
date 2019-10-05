@@ -1,0 +1,5 @@
+{
+    "name": "debug",
+    "vertex": "debug_vertex",
+    "fragment": "debug_fragment"
+}

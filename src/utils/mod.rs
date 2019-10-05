@@ -1,6 +1,4 @@
-pub mod loader;
+pub mod collada;
 pub mod material;
 pub mod model;
-pub mod object;
 pub mod shader;
-pub mod texture;

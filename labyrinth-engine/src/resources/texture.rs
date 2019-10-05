@@ -7,7 +7,7 @@ pub type BaseTexture = Texture2d;
 pub struct Texture {
     pub name: String,
     pub basetexture: Shared<Texture2d>,
-    pub normal: Shared<BaseTexture>
+    pub normal: Shared<BaseTexture>,
 }
 
 impl Texture {
@@ -15,7 +15,7 @@ impl Texture {
         Texture {
             name,
             basetexture,
-            normal
+            normal,
         }
     }
 }

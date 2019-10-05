@@ -1,0 +1,5 @@
+{
+    "name": "default",
+    "vertex": "default_vertex",
+    "fragment": "default_fragment"
+}

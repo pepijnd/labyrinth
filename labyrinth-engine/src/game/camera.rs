@@ -1,11 +1,11 @@
+use labyrinth_cgmath::FloatMat4;
 use labyrinth_cgmath::FloatPoint3;
 use labyrinth_cgmath::FloatVec3;
-use labyrinth_cgmath::FloatMat4;
 
 pub struct Camera {
     position: FloatPoint3,
     look_at: FloatPoint3,
-    up: FloatVec3
+    up: FloatVec3,
 }
 
 impl Camera {
@@ -13,7 +13,7 @@ impl Camera {
         Camera {
             position: FloatPoint3::new(-6.0, 4.0, -4.0),
             look_at: FloatPoint3::new(0.0, 0.0, 0.0),
-            up: FloatVec3::new(0.0, 1.0, 0.0)
+            up: FloatVec3::new(0.0, 1.0, 0.0),
         }
     }
 
