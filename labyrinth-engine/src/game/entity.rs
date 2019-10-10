@@ -16,9 +16,9 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub fn new(name: String, object: Index) -> Entity {
+    pub fn new(name: &str, object: Index) -> Entity {
         Entity {
-            name,
+            name: name.to_owned(),
             object,
             position: FloatVec3::new(0.0, 0.0, 0.0),
             scale: labyrinth_cgmath::num_traits::one(),

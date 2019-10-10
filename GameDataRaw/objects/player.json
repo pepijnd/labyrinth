@@ -1,5 +1,5 @@
 {
-    "name": "ObjPlayer",
+    "name": "player",
     "model": "player",
     "program": "default"
 }

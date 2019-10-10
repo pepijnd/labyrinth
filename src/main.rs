@@ -79,7 +79,7 @@ fn main() {
             let mut loader = ResourceLoader::new(context.clone());
             loader.add("main".to_owned(), game_data);
             let settings =
-                window::WindowSettings::new().with_size(window::WindowSize::new(800, 640));
+                window::WindowSettings::new().with_size(window::WindowSize::new(1280, 720));
             let window = window::Window::new(&settings);
             runner::Runner::new(window, game, loader, context.clone()).run();
         }

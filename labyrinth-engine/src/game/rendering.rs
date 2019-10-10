@@ -17,8 +17,11 @@ use labyrinth_cgmath::{FloatMat4, FloatPoint3, FloatVec3};
 use crate::resources::material::EffectBuffer;
 use crate::resources::material::EffectUniform;
 use crate::resources::shader::ProgramBuffer;
+use crate::resources::object::ObjectBuffer;
 
 use crate::resources::model::MeshBuffer;
+
+use crate::game::entity::Entity;
 
 use labyrinth_glyph::glyph_brush::rusttype::Font;
 use labyrinth_glyph::GlyphBrush;
@@ -69,24 +72,24 @@ where
 pub struct Light {
     position: FloatVec3,
     _pad1: [f32; 1],
-    center: FloatVec3,
+    direction: FloatVec3,
     _pad2: [f32; 1],
     color: FloatVec3,
 }
 
 impl Light {
-    fn new(position: FloatVec3, center: FloatVec3, color: FloatVec3) -> Light {
+    fn new(position: FloatVec3, direction: FloatVec3, color: FloatVec3) -> Light {
         Light {
             position,
             _pad1: [0f32; 1],
-            center,
+            direction,
             _pad2: [0f32; 1],
             color,
         }
     }
 }
 
-implement_uniform_block!(Light, position, center, color);
+implement_uniform_block!(Light, position, direction, color);
 
 #[derive(Copy, Clone)]
 pub struct LightMap {
@@ -207,19 +210,26 @@ impl<'a> Renderer<'a> {
         let shared = context.clone();
         let context = shared.borrow();
 
+        let player = ObjectBuffer::find(&context, "player").unwrap();
+        let player = Entity::new("player", player);
+
+        player.render_queue(&context, &mut buffer);
+
         for entity in game.entities.iter() {
             entity.render_queue(&context, &mut buffer);
         }
         buffer.sort();
 
         let mut camera = Camera::new();
-        *camera.get_position_mut() = FloatPoint3::new(2.5, 2.5, 3.2);
-        *camera.get_look_at_mut() = FloatPoint3::new(0.0, 0.5, 0.0);
+        *camera.get_position_mut() = FloatPoint3::new(3.5, 2.5, -3.5);
+        *camera.get_look_at_mut() = FloatPoint3::new(0.0, 0.0, 0.0);
+
+        let pos = FloatVec3::new((context.t * 1.75).sin() * 4.0 + 2.0, 3.5, context.t.cos() * 8.0);
 
         let light = Light::new(
-            FloatVec3::new(context.t.sin() * 8.0, 8.0, context.t.cos() * 8.0),
-            FloatVec3::new(0.0, 1.0, 0.0),
-            FloatVec3::new(1.0, 0.95, 0.9),
+            pos,
+            (-pos).normalize(),
+            FloatVec3::new(1.0, 1.0, 1.0),
         );
         let lightmap = glium::uniforms::UniformBuffer::new(facade, LightMap::new(light)).unwrap();
 
@@ -227,7 +237,7 @@ impl<'a> Renderer<'a> {
         let dpm = labyrinth_cgmath::perspective(Rad::full_turn() / 8.0, 1.0, 2.0, 50.0);
         let dvm = labyrinth_cgmath::Matrix4::look_at(
             FloatPoint3::from_vec(light.position),
-            FloatPoint3::from_vec(light.center),
+            FloatPoint3::from_vec(light.position + light.direction),
             FloatVec3::new(0.0, 1.0, 0.0),
         );
 
@@ -278,12 +288,13 @@ impl<'a> Renderer<'a> {
         let perspective: FloatMat4 = {
             let (width, height) = target.get_dimensions();
             let ratio = width as f32 / height as f32;
-            let fov = labyrinth_cgmath::Deg(45f32).into();
+            let fovx: Rad<f32> = labyrinth_cgmath::Deg(90f32).into();
+            let fovy = Rad::atan((fovx/2.0).tan() * (1.0 / ratio)) * 2.0;
             let zfar = 1024.0;
             let znear = 0.1;
 
             let perspective = labyrinth_cgmath::PerspectiveFov {
-                fovy: fov,
+                fovy: fovy,
                 aspect: ratio,
                 near: znear,
                 far: zfar,
