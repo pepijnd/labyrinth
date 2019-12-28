@@ -1,19 +1,25 @@
-use crate::game::context::LabyrinthContext;
 use glium::backend::Facade;
-
-use labyrinth_assets::assets::{Effect, Material};
-
-use labyrinth_cgmath::FloatVec3;
-
 use generational_arena::Index;
 
+use labyrinth_assets::assets::{Effect, Material};
+use labyrinth_cgmath::FloatVec3;
+
+use crate::game::context::LabyrinthContext;
+use crate::resources::{
+    Loadable, Findable
+};
+use crate::impl_resource;
+
+#[derive(Debug)]
 pub struct MaterialBuffer {
     pub name: String,
     pub effect: Index,
     //pub texture: Shared<Texture>,
 }
 
-#[derive(Clone)]
+impl_resource!(MaterialBuffer, name);
+
+#[derive(Clone, Debug)]
 pub struct EffectBuffer {
     pub name: String,
     pub emission: FloatVec3,
@@ -24,6 +30,8 @@ pub struct EffectBuffer {
     pub refraction: f32,
     pub alpha: f32,
 }
+
+impl_resource!(EffectBuffer, name);
 
 #[derive(Copy, Clone)]
 pub struct MatUnfiform {
@@ -58,8 +66,10 @@ implement_uniform_block!(
 
 implement_uniform_block!(MatUnfiform, effect);
 
-impl MaterialBuffer {
-    pub fn load<F>(material: &Material, _facade: &F, context: &mut LabyrinthContext) -> Index
+impl Loadable for MaterialBuffer {
+    type Source = Material;
+
+    fn load<F>(material: &Material, _facade: &F, context: &mut LabyrinthContext) -> Index
     where
         F: Facade,
     {
@@ -67,20 +77,13 @@ impl MaterialBuffer {
             name: material.name.clone(),
             effect: EffectBuffer::find(context, &material.effect).unwrap(),
         };
-        context.materials.insert(buffer)
+        context.resources.insert(Box::new(buffer))
     }
+}
 
-    pub fn get(context: &LabyrinthContext, index: Index) -> Option<&MaterialBuffer> {
-        context.materials.get(index)
-    }
 
-    pub fn find(context: &LabyrinthContext, name: &str) -> Option<Index> {
-        match context.materials.iter().find(|x| x.1.name == name) {
-            Some(n) => Some(n.0),
-            None => None,
-        }
-    }
 
+impl MaterialBuffer {
     pub fn to_uniform(&self, context: &LabyrinthContext) -> MatUnfiform {
         MatUnfiform {
             effect: EffectBuffer::get(context, self.effect)
@@ -90,8 +93,12 @@ impl MaterialBuffer {
     }
 }
 
-impl EffectBuffer {
-    pub fn load<F>(effect: &Effect, _facade: &F, context: &mut LabyrinthContext) -> Index
+
+
+impl Loadable for EffectBuffer {
+    type Source = Effect;
+
+    fn load<F>(effect: &Effect, _facade: &F, context: &mut LabyrinthContext) -> Index
     where
         F: Facade,
     {
@@ -105,20 +112,12 @@ impl EffectBuffer {
             refraction: effect.refraction,
             alpha: effect.alpha,
         };
-        context.effects.insert(buffer)
+        context.resources.insert(Box::new(buffer))
     }
+}
 
-    pub fn get(context: &LabyrinthContext, index: Index) -> Option<&EffectBuffer> {
-        context.effects.get(index)
-    }
 
-    pub fn find(context: &LabyrinthContext, name: &str) -> Option<Index> {
-        match context.effects.iter().find(|x| x.1.name == name) {
-            Some(n) => Some(n.0),
-            None => None,
-        }
-    }
-
+impl EffectBuffer {
     pub fn to_uniform(&self) -> EffectUniform {
         EffectUniform {
             emission: self.emission,

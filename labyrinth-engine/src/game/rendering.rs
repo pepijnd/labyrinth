@@ -14,12 +14,16 @@ use labyrinth_cgmath::prelude::*;
 use labyrinth_cgmath::Rad;
 use labyrinth_cgmath::{FloatMat4, FloatPoint3, FloatVec3};
 
-use crate::resources::material::EffectBuffer;
-use crate::resources::material::EffectUniform;
-use crate::resources::shader::ProgramBuffer;
-use crate::resources::object::ObjectBuffer;
-
-use crate::resources::model::MeshBuffer;
+use crate::resources::{
+    Findable,
+    material::EffectBuffer,
+    material::EffectUniform,
+    shader::ProgramBuffer,
+    object::ObjectBuffer,
+    model::MeshBuffer,
+    animation::SkeletonBuffer,
+    animation::AnimationBuffer
+};
 
 use crate::game::entity::Entity;
 
@@ -150,7 +154,7 @@ pub struct RenderBuffer {
     inner: Vec<RenderCommand>,
 }
 
-impl<'a> RenderBuffer {
+impl RenderBuffer {
     fn new() -> RenderBuffer {
         RenderBuffer { inner: Vec::new() }
     }
@@ -202,7 +206,7 @@ impl<'a> Renderer<'a> {
         }
 
         let shadow_map = self.shadow_map.get_or_insert_with(|| {
-            glium::texture::DepthTexture2d::empty(facade, 2096, 2096).unwrap()
+            glium::texture::DepthTexture2d::empty(facade, 512, 512).unwrap()
         });
 
         let mut buffer = RenderBuffer::new();
@@ -212,6 +216,12 @@ impl<'a> Renderer<'a> {
 
         let player = ObjectBuffer::find(&context, "player").unwrap();
         let player = Entity::new("player", player);
+
+        let skeleton = SkeletonBuffer::find(&context, "player").unwrap();
+        let _skeleton = SkeletonBuffer::get(&context, skeleton);
+
+        let animation = AnimationBuffer::find(&context, "player").unwrap();
+        let _animation = AnimationBuffer::get(&context, animation).unwrap();
 
         player.render_queue(&context, &mut buffer);
 

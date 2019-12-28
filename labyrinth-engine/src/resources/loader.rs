@@ -1,13 +1,21 @@
-use glium::backend::Facade;
 use std::collections::HashMap;
 
-use crate::game::context::SharedContext;
-use crate::resources::{
-    material::EffectBuffer, material::MaterialBuffer, model::ModelBuffer, object::ObjectBuffer,
-    shader::ProgramBuffer,
-};
+use glium::backend::Facade;
 
 use labyrinth_assets::assets::Assets;
+
+use crate::game::context::SharedContext;
+use crate::game::context::LabyrinthContext;
+use crate::resources::{
+    Loadable,
+    material::EffectBuffer, 
+    material::MaterialBuffer, 
+    model::ModelBuffer, 
+    object::ObjectBuffer,
+    shader::ProgramBuffer,
+    animation::SkeletonBuffer,
+    animation::AnimationBuffer
+};
 
 pub struct ResourceLoader {
     context: SharedContext,
@@ -26,6 +34,16 @@ impl ResourceLoader {
         self.assets.insert(name, assets);
     }
 
+    pub fn load_asset<L, F>(assets: &[L::Source], facade: &F, context: &mut LabyrinthContext)
+    where
+        L: Loadable,
+        F: Facade
+    {
+        for asset in assets.iter() {
+            L::load(asset, facade, context);
+        }
+    }
+
     pub fn load_assets<F>(&self, facade: &F)
     where
         F: Facade,
@@ -33,25 +51,13 @@ impl ResourceLoader {
         let mut context = self.context.borrow_mut();
 
         for (_name, assets) in self.assets.iter() {
-            for program in assets.programs.iter() {
-                ProgramBuffer::load(program, facade, &mut context);
-            }
-
-            for effect in assets.effects.iter() {
-                EffectBuffer::load(effect, facade, &mut context);
-            }
-
-            for material in assets.materials.iter() {
-                MaterialBuffer::load(material, facade, &mut context);
-            }
-
-            for model in assets.models.iter() {
-                ModelBuffer::load(model, facade, &mut context);
-            }
-
-            for object in assets.objects.iter() {
-                ObjectBuffer::load(object, facade, &mut context);
-            }
+            Self::load_asset::<ProgramBuffer, F>(&assets.programs, facade, &mut context);
+            Self::load_asset::<EffectBuffer, F>(&assets.effects, facade, &mut context);
+            Self::load_asset::<MaterialBuffer, F>(&assets.materials, facade, &mut context);
+            Self::load_asset::<ModelBuffer, F>(&assets.models, facade, &mut context);
+            Self::load_asset::<ObjectBuffer, F>(&assets.objects, facade, &mut context);
+            Self::load_asset::<SkeletonBuffer, F>(&assets.skeletons, facade, &mut context);
+            Self::load_asset::<AnimationBuffer, F>(&assets.animations, facade, &mut context);
         }
     }
 }

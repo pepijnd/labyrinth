@@ -4,6 +4,7 @@ use crate::labyrinth_cgmath::Zero;
 use labyrinth_cgmath::{FloatMat4, FloatVec3, Rad};
 
 use crate::resources::object::ObjectBuffer;
+use crate::resources::Findable;
 use generational_arena::Index;
 
 #[derive(Clone)]

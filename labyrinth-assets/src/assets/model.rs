@@ -7,9 +7,9 @@ use serde::ser::{SerializeStruct, Serializer};
 use itertools::izip;
 use itertools::Itertools;
 
-use labyrinth_cgmath::{prelude::*, FloatVec2, FloatVec3};
-
 use glium::implement_vertex;
+
+use labyrinth_cgmath::{prelude::*, FloatVec2, FloatVec3};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Model {
