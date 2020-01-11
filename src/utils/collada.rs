@@ -4,7 +4,7 @@ use labyrinth_assets::assets::{
 
 use labyrinth_cgmath::FloatMat4;
 
-use itertools::izip;
+use crate::convert::ConvertError;
 
 pub struct ColladaAssets {
     pub models: Vec<Model>,
@@ -13,9 +13,9 @@ pub struct ColladaAssets {
     pub effects: Vec<Effect>,
 }
 
-pub fn parse_collada_file(input: String) -> ColladaAssets {
-    let file = labyrinth_collada::document::ColladaDocument::from_str(&input).unwrap();
-    let objs = file.get_obj_set().unwrap();
+pub fn parse_collada_file(input: String) -> Result<ColladaAssets, ConvertError> {
+    let file = labyrinth_collada::document::ColladaDocument::from_str(&input)?;
+    let objs = file.get_obj_set().ok_or_else(|| ConvertError::Parse("Unable to get obj set".to_string()))?;
 
     let mut models = Vec::new();
     for obj in objs.objects.iter() {
@@ -28,29 +28,40 @@ pub fn parse_collada_file(input: String) -> ColladaAssets {
                     if let Some(shape_material) = &shapes.material {
                         material = shape_material.clone();
                     }
-                    for (vindex, tindex, _nindex) in izip!(
-                        shapes.vertices.iter().cloned(),
-                        shapes.tex_vertices.as_ref().unwrap().iter().cloned(),
-                        shapes.normals.as_ref().unwrap().iter().cloned()
-                    ) {
+
+                    for n in 0..shapes.vertices.len() {
+                        let verts = shapes.vertices[n];
+                        let tverts: (usize, usize, usize) = match shapes.tex_vertices.as_ref() {
+                            Some(x) => x[n],
+                            None => (0, 0, 0)
+                        };
                         let mut primitive = Vertex::from_vertices(vec![
                             (
-                                obj.vertices[vindex.0].into(),
-                                obj.tex_vertices[tindex.0].into(),
-                                obj.joint_weights[vindex.0].joints,
-                                obj.joint_weights[vindex.0].weights,
+                                obj.vertices[verts.0].into(),
+                                match obj.tex_vertices.get(tverts.0) {
+                                    Some(x) => (x.x as f32, x.y as f32),
+                                    None => (0_f32, 0_f32)
+                                },
+                                obj.joint_weights[verts.0].joints,
+                                obj.joint_weights[verts.0].weights,
                             ),
                             (
-                                obj.vertices[vindex.1].into(),
-                                obj.tex_vertices[tindex.1].into(),
-                                obj.joint_weights[vindex.1].joints,
-                                obj.joint_weights[vindex.1].weights,
+                                obj.vertices[verts.1].into(),
+                                match obj.tex_vertices.get(tverts.0) {
+                                    Some(x) => (x.x as f32, x.y as f32),
+                                    None => (0_f32, 0_f32)
+                                },
+                                obj.joint_weights[verts.1].joints,
+                                obj.joint_weights[verts.1].weights,
                             ),
                             (
-                                obj.vertices[vindex.2].into(),
-                                obj.tex_vertices[tindex.2].into(),
-                                obj.joint_weights[vindex.2].joints,
-                                obj.joint_weights[vindex.2].weights,
+                                obj.vertices[verts.2].into(),
+                                match obj.tex_vertices.get(tverts.0) {
+                                    Some(x) => (x.x as f32, x.y as f32),
+                                    None => (0_f32, 0_f32)
+                                },
+                                obj.joint_weights[verts.2].joints,
+                                obj.joint_weights[verts.2].weights,
                             ),
                         ]);
                         vertices.append(&mut primitive);
@@ -135,10 +146,10 @@ pub fn parse_collada_file(input: String) -> ColladaAssets {
 
     dbg!(&effects);
 
-    ColladaAssets {
+    Ok(ColladaAssets {
         models,
         skeletons,
         animations,
         effects,
-    }
+    })
 }

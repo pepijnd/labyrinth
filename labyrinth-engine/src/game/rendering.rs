@@ -22,10 +22,12 @@ use crate::resources::{
     object::ObjectBuffer,
     model::MeshBuffer,
     animation::SkeletonBuffer,
-    animation::AnimationBuffer
+    animation::AnimationBuffer,
 };
 
 use crate::game::entity::Entity;
+
+use crate::labyrinth_error;
 
 use labyrinth_glyph::glyph_brush::rusttype::Font;
 use labyrinth_glyph::GlyphBrush;
@@ -33,6 +35,17 @@ use labyrinth_glyph::GlyphBrush;
 use glyph_brush::{SectionText, VariedSection};
 
 use generational_arena::Index;
+
+#[derive(Debug)]
+enum RenderError {
+    Render(Box<dyn std::error::Error>)
+}
+
+labyrinth_error!(RenderError, |e| match e {
+    RenderError::Render(e) => {
+        format!("{}", e)
+    }
+});
 
 #[derive(Copy, Clone)]
 struct DebugVertex {
@@ -48,7 +61,7 @@ impl DebugVertex {
 
 implement_vertex!(DebugVertex, pos, tex);
 
-fn make_debug<F>(facade: &F) -> (glium::VertexBuffer<DebugVertex>, glium::IndexBuffer<u16>)
+fn make_debug<F>(facade: &F) -> Result<(glium::VertexBuffer<DebugVertex>, glium::IndexBuffer<u16>), RenderError>
 where
     F: Facade + Deref<Target = Context>,
 {
@@ -60,15 +73,13 @@ where
             DebugVertex::new([-1.0, 1.0], [0.0, 1.0]),
             DebugVertex::new([1.0, 1.0], [1.0, 1.0]),
         ],
-    )
-    .unwrap();
+    ).map_err(|e| RenderError::Render(e.into()))?;
     let indices = glium::IndexBuffer::new(
         facade,
         glium::index::PrimitiveType::TrianglesList,
         &[0, 1, 2, 1, 3, 2],
-    )
-    .unwrap();
-    (vertices, indices)
+    ).map_err(|e| RenderError::Render(e.into()))?;
+    Ok((vertices, indices))
 }
 
 #[repr(C)]
@@ -189,44 +200,53 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn render<T, F>(&mut self, game: &Game, target: &mut T, facade: &F, context: SharedContext)
+    pub fn render<T, F>(&mut self, game: &Game, target: &mut T, facade: &F, context: SharedContext) -> crate::LabyrinthResult<()>
     where
         T: Surface,
         F: Facade + Deref<Target = Context>,
     {
-        let brush = self.font.get_or_insert_with(|| {
-            let font: &[u8] =
-                include_bytes!("/home/pepijn/Projects/labyrinth/assets/ConnectionII.ttf");
-            GlyphBrush::new(facade, vec![Font::from_bytes(font).unwrap()])
-        });
+        match &self.font {
+            Some(_) => {},
+            None => {
+                let font_src: &[u8] = include_bytes!("/home/pepijn/Projects/labyrinth/assets/ConnectionII.ttf");
+                let font = GlyphBrush::new(facade, vec![Font::from_bytes(font_src).map_err(|e| RenderError::Render(e.into()))?]);
+                self.font = Some(font);
+            }
+        }
+        let brush = self.font.as_mut().unwrap();
 
         {
             let mut context = context.borrow_mut();
             context.t += 0.0075;
         }
 
-        let shadow_map = self.shadow_map.get_or_insert_with(|| {
-            glium::texture::DepthTexture2d::empty(facade, 512, 512).unwrap()
-        });
+        match &self.shadow_map {
+            Some(_) => {},
+            None => {
+                let map = glium::texture::DepthTexture2d::empty(facade, 512, 512).map_err(|e| RenderError::Render(e.into()))?;
+                self.shadow_map = Some(map);
+            }
+        }
+        let shadow_map = self.shadow_map.as_ref().unwrap();
 
         let mut buffer = RenderBuffer::new();
 
         let shared = context.clone();
         let context = shared.borrow();
 
-        let player = ObjectBuffer::find(&context, "player").unwrap();
-        let player = Entity::new("player", player);
+        let player = ObjectBuffer::find(&context, "BoxChar")?;
+        let player = Entity::new("BoxChar", player);
 
-        let skeleton = SkeletonBuffer::find(&context, "player").unwrap();
+        let skeleton = SkeletonBuffer::find(&context, "BoxChar")?;
         let _skeleton = SkeletonBuffer::get(&context, skeleton);
 
-        let animation = AnimationBuffer::find(&context, "player").unwrap();
-        let _animation = AnimationBuffer::get(&context, animation).unwrap();
+        let animation = AnimationBuffer::find(&context, "BoxChar")?;
+        let _animation = AnimationBuffer::get(&context, animation)?;
 
-        player.render_queue(&context, &mut buffer);
+        player.render_queue(&context, &mut buffer)?;
 
         for entity in game.entities.iter() {
-            entity.render_queue(&context, &mut buffer);
+            entity.render_queue(&context, &mut buffer)?;
         }
         buffer.sort();
 
@@ -241,7 +261,8 @@ impl<'a> Renderer<'a> {
             (-pos).normalize(),
             FloatVec3::new(1.0, 1.0, 1.0),
         );
-        let lightmap = glium::uniforms::UniformBuffer::new(facade, LightMap::new(light)).unwrap();
+        let lightmap = glium::uniforms::UniformBuffer::new(facade, LightMap::new(light))
+            .map_err(|e| RenderError::Render(e.into()))?;
 
         let _w = 4.0;
         let dpm = labyrinth_cgmath::perspective(Rad::full_turn() / 8.0, 1.0, 2.0, 50.0);
@@ -262,17 +283,17 @@ impl<'a> Renderer<'a> {
         };
 
         let mut shadow_target =
-            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &*shadow_map).unwrap();
+            glium::framebuffer::SimpleFrameBuffer::depth_only(facade, &*shadow_map).map_err(|e| RenderError::Render(e.into()))?;
         shadow_target.clear_color_and_depth((1.0, 1.0, 1.0, 1.0), 1.0);
 
         for command in buffer.inner.iter_mut() {
             let depth_mvp = dpm * dvm * command.matrix;
             command.depth_mvp = depth_mvp;
 
-            let mesh = MeshBuffer::get(&context, command.mesh).unwrap();
+            let mesh = MeshBuffer::get(&context, command.mesh)?;
             let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-            let program = ProgramBuffer::find(&context, "shadow").unwrap();
-            let program = ProgramBuffer::get(&context, program).unwrap();
+            let program = ProgramBuffer::find(&context, "shadow")?;
+            let program = ProgramBuffer::get(&context, program)?;
 
             let uniforms = uniform!(depth_mvp: depth_mvp,);
 
@@ -284,7 +305,7 @@ impl<'a> Renderer<'a> {
                     &uniforms,
                     &params,
                 )
-                .unwrap();
+                .map_err(|e| RenderError::Render(e.into()))?;
         }
 
         let bias_matrix: FloatMat4 = [
@@ -324,15 +345,15 @@ impl<'a> Renderer<'a> {
         };
 
         for command in buffer.inner.iter() {
-            let material = glium::uniforms::UniformBuffer::new(facade, command.material).unwrap();
+            let material = glium::uniforms::UniformBuffer::new(facade, command.material).map_err(|e| RenderError::Render(e.into()))?;
             //let tex = context.get_texture(&command.texture).unwrap();
             //let tex = tex.borrow();
             let depth_bias_mvp = bias_matrix * command.depth_mvp;
             //let basetex = tex.basetexture.borrow();
             //let normal = tex.normal.borrow();
-            let mesh = MeshBuffer::get(&context, command.mesh).unwrap();
+            let mesh = MeshBuffer::get(&context, command.mesh)?;
             let matrix = command.matrix;
-            let program = ProgramBuffer::get(&context, command.program).unwrap();
+            let program = ProgramBuffer::get(&context, command.program)?;
             let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
 
             let uniforms = uniform! {
@@ -358,17 +379,17 @@ impl<'a> Renderer<'a> {
                     &uniforms,
                     &params,
                 )
-                .unwrap();
+                .map_err(|e| RenderError::Render(e.into()))?;
         }
 
-        let debug = make_debug(facade);
+        let debug = make_debug(facade)?;
         let uniforms = uniform!(
             tex: glium::uniforms::Sampler::new(&*shadow_map)
                     .magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest)
                     .minify_filter(glium::uniforms::MinifySamplerFilter::Nearest)
         );
-        let program = ProgramBuffer::find(&context, "debug").unwrap();
-        let program = ProgramBuffer::get(&context, program).unwrap();
+        let program = ProgramBuffer::find(&context, "debug")?;
+        let program = ProgramBuffer::get(&context, program)?;
         target.clear_depth(1.0);
         target
             .draw(
@@ -378,7 +399,7 @@ impl<'a> Renderer<'a> {
                 &uniforms,
                 &Default::default(),
             )
-            .unwrap();
+            .map_err(|e| RenderError::Render(e.into()))?;
 
         let screen_dims = target.get_dimensions();
         brush.queue(VariedSection {
@@ -393,5 +414,7 @@ impl<'a> Renderer<'a> {
         brush.draw_queued(facade, target);
 
         self.counter.count(|| {});
+
+        Ok(())
     }
 }

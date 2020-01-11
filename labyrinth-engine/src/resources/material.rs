@@ -8,7 +8,9 @@ use crate::game::context::LabyrinthContext;
 use crate::resources::{
     Loadable, Findable
 };
+
 use crate::impl_resource;
+use crate::resources::ResourceError;
 
 #[derive(Debug)]
 pub struct MaterialBuffer {
@@ -66,39 +68,37 @@ implement_uniform_block!(
 
 implement_uniform_block!(MatUnfiform, effect);
 
+
 impl Loadable for MaterialBuffer {
     type Source = Material;
 
-    fn load<F>(material: &Material, _facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(material: &Material, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
         let buffer = MaterialBuffer {
             name: material.name.clone(),
-            effect: EffectBuffer::find(context, &material.effect).unwrap(),
+            effect: EffectBuffer::find(context, &material.effect).map_err(|e| 
+                ResourceError::Loading(e, material.name.clone(), Self::get_type()))?
         };
-        context.resources.insert(Box::new(buffer))
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }
 
 
 
 impl MaterialBuffer {
-    pub fn to_uniform(&self, context: &LabyrinthContext) -> MatUnfiform {
-        MatUnfiform {
-            effect: EffectBuffer::get(context, self.effect)
-                .unwrap()
-                .to_uniform(),
-        }
+    pub fn to_uniform(&self, context: &LabyrinthContext) -> crate::LabyrinthResult<MatUnfiform> {
+        Ok(MatUnfiform {
+            effect: EffectBuffer::get(context, self.effect)?.to_uniform(),
+        })
     }
 }
-
-
 
 impl Loadable for EffectBuffer {
     type Source = Effect;
 
-    fn load<F>(effect: &Effect, _facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(effect: &Effect, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
@@ -112,7 +112,8 @@ impl Loadable for EffectBuffer {
             refraction: effect.refraction,
             alpha: effect.alpha,
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }
 

@@ -1,3 +1,10 @@
+#![feature(backtrace)]
+#![feature(box_syntax)]
+
+#[macro_use]
+extern crate log;
+extern crate env_logger;
+
 use std::io::prelude::*;
 
 use clap::clap_app;
@@ -16,7 +23,20 @@ mod utils;
 use convert::convert;
 use pack::pack;
 
-fn main() {
+
+fn main() -> Result<(), Box<dyn labyrinth_engine::error::LabyrinthErrorBase>> {
+    let log_lvl = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
+    env_logger::Builder::new()
+        .filter(None, log_lvl)
+        .init();
+
+    info!("Logging on level {}", log_lvl);
+
     let matches = clap_app!(labyrinth_app =>
         (version: "0.1.0")
         (author: "Pepijn Dragt")
@@ -45,7 +65,7 @@ fn main() {
             let command = command.unwrap();
             let input = command.value_of("input").unwrap();
             let output = command.value_of("output").unwrap();
-            let packed = pack(input).unwrap();
+            let packed = pack(input)?;
             let packed = bincode::serialize(&packed).unwrap();
             let mut file = std::fs::File::create(output).unwrap();
             file.write_all(&packed).unwrap();
@@ -54,7 +74,7 @@ fn main() {
             let command = command.unwrap();
             let input = command.value_of("input").unwrap();
             let output = command.value_of("output").unwrap();
-            convert(input, output).unwrap();
+            convert(input, output)?;
         }
         "launch" | &_ => {
             let mut game_data: Option<Assets> = None;
@@ -84,4 +104,6 @@ fn main() {
             runner::Runner::new(window, game, loader, context.clone()).run();
         }
     }
+
+    Ok(())
 }

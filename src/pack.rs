@@ -6,7 +6,36 @@ use labyrinth_assets::assets::{
     Animation, Assets, Effect, Material, Object, Program, Shader, Skeleton, Vertices,
 };
 
-pub fn pack(in_file: &str) -> Result<Assets, std::io::Error> {
+use labyrinth_engine::labyrinth_error;
+
+#[derive(Debug)]
+pub enum PackError {
+    IO(std::io::Error),
+    Serde(serde_json::error::Error)
+}
+
+labyrinth_error!(PackError, |e| match e {
+    PackError::IO(e) => {
+        format!("[IO] {}", e)
+    },
+    PackError::Serde(e) => {
+        format!("[Serde] {}", e)
+    }
+});
+
+impl From<std::io::Error> for PackError {
+    fn from(e: std::io::Error) -> Self {
+        PackError::IO(e.into())
+    }
+} 
+
+impl From<serde_json::error::Error> for PackError {
+    fn from(e: serde_json::error::Error) -> Self {
+        PackError::Serde(e.into())
+    }
+}
+
+pub fn pack(in_file: &str) -> Result<Assets, PackError> {
     let base_dir = std::path::PathBuf::from(in_file);
 
     let mut meshes: HashMap<String, Vertices> = HashMap::new();

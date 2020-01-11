@@ -40,7 +40,9 @@ impl ResourceLoader {
         F: Facade
     {
         for asset in assets.iter() {
-            L::load(asset, facade, context);
+            if let Err(e) = L::load(asset, facade, context) {
+                warn!("{}", e);
+            }
         }
     }
 

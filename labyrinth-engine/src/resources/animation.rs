@@ -26,7 +26,7 @@ impl_resource!(SkeletonBuffer, name);
 impl Loadable for SkeletonBuffer {
     type Source = Skeleton;
 
-    fn load<F>(skeleton: &Skeleton, _facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(skeleton: &Skeleton, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
@@ -35,7 +35,8 @@ impl Loadable for SkeletonBuffer {
             joints: skeleton.joints.clone(),
             bind_poses: skeleton.bind_poses.clone()
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }
 
@@ -50,7 +51,7 @@ impl_resource!(AnimationBuffer, name);
 impl Loadable for AnimationBuffer {
     type Source = Animation;
 
-    fn load<F>(animation: &Animation, _facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(animation: &Animation, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
@@ -58,6 +59,7 @@ impl Loadable for AnimationBuffer {
             name: animation.name.clone(),
             targets: animation.targets.clone()
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }

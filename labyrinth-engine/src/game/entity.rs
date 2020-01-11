@@ -27,14 +27,16 @@ impl Entity {
         }
     }
 
-    pub fn render_queue(&self, context: &LabyrinthContext, buffer: &mut RenderBuffer) {
-        let object = ObjectBuffer::get(context, self.object).unwrap();
-        let buffers = object.render_command(context);
+    pub fn render_queue(&self, context: &LabyrinthContext, buffer: &mut RenderBuffer) -> crate::LabyrinthResult<()> {
+        let object = ObjectBuffer::get(context, self.object)?;
+        let buffers = object.render_command(context)?;
         for mut command in buffers {
             command.matrix = FloatMat4::from_translation(self.position)
                 * FloatMat4::from_angle_y(self.rotation)
                 * FloatMat4::from_scale(self.scale);
             buffer.push(command);
         }
+
+        Ok(())
     }
 }

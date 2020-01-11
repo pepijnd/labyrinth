@@ -95,7 +95,13 @@ impl Runner {
                         let game = { lock.read().unwrap().clone() };
                         let mut target = display.draw();
                         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-                        renderer.render(&game, &mut target, &display, context.clone());
+                        match renderer.render(&game, &mut target, &display, context.clone()) {
+                            Ok(_) => {},
+                            Err(e) => {
+                                error!("{}", e);
+                                panic!("{}", e);
+                            }
+                        }
                         target.finish().unwrap();
                         proxy.send_event(Event::PostRender).unwrap();
                     }

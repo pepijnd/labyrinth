@@ -12,6 +12,9 @@ use crate::resources::{
     Findable, Loadable
 };
 
+use crate::LabyrinthResult;
+use crate::resources::ResourceError;
+
 #[derive(Debug)]
 pub struct MeshBuffer {
     pub name: String,
@@ -32,23 +35,26 @@ impl_resource!(ModelBuffer, name);
 impl Loadable for MeshBuffer {
     type Source = Mesh;
 
-    fn load<F>(mesh: &Mesh, facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(mesh: &Mesh, facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
         let buffer = MeshBuffer {
             name: mesh.name.clone(),
-            material: MaterialBuffer::find(context, &mesh.material).unwrap(),
-            vertices: VertexBuffer::new(facade, &mesh.vertices).unwrap(),
+            material: MaterialBuffer::find(context, &mesh.material).map_err(|e| 
+                ResourceError::Loading(e, mesh.name.clone(), Self::get_type()))?,
+            vertices: VertexBuffer::new(facade, &mesh.vertices)
+            .map_err(|e| ResourceError::Render(e.into(), mesh.name.clone(), Self::get_type()))?
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }
 
 impl Loadable for ModelBuffer {
     type Source = Model;
 
-    fn load<F>(model: &Model, facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(model: &Model, facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
@@ -58,8 +64,11 @@ impl Loadable for ModelBuffer {
                 .meshes
                 .iter()
                 .map(|x| MeshBuffer::load(x, facade, context))
-                .collect(),
+                .fold(Ok(Vec::new()), |a: LabyrinthResult<Vec<Index>>, b: LabyrinthResult<Index>| 
+                    a.and_then(|mut x| {x.push(b?); Ok(x)})
+                )?
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }

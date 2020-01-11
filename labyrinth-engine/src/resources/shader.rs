@@ -3,6 +3,9 @@ use generational_arena::Index;
 
 use labyrinth_assets::assets::Program;
 
+use crate::resources::ResourceError;
+use crate::resources::Findable;
+
 use crate::game::context::LabyrinthContext;
 use crate::impl_resource;
 use crate::resources::Loadable;
@@ -18,7 +21,7 @@ impl_resource!(ProgramBuffer, name);
 impl Loadable for ProgramBuffer {
     type Source = Program;
 
-    fn load<F>(program: &Program, facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(program: &Program, facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
@@ -30,8 +33,9 @@ impl Loadable for ProgramBuffer {
                 &program.fragment.code,
                 None,
             )
-            .unwrap(),
+            .map_err(|e| ResourceError::Render(e.into(), program.name.clone(), Self::get_type()))?
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }

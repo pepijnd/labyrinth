@@ -1,0 +1,5 @@
+{
+    "name": "BoxChar",
+    "model": "BoxCharMesh",
+    "program": "default"
+}

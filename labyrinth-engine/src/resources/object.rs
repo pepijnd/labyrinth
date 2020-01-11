@@ -17,6 +17,8 @@ use crate::resources::{
     shader::ProgramBuffer
 };
 
+use crate::resources::ResourceError;
+
 #[derive(Clone, Debug)]
 pub struct ObjectBuffer {
     pub name: String,
@@ -29,28 +31,31 @@ impl_resource!(ObjectBuffer, name);
 impl Loadable for ObjectBuffer {
     type Source = Object;
 
-    fn load<F>(object: &Object, _facade: &F, context: &mut LabyrinthContext) -> Index
+    fn load<F>(object: &Object, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
     where
         F: Facade,
     {
         let buffer = ObjectBuffer {
             name: object.name.clone(),
-            model: ModelBuffer::find(context, &object.model).unwrap(),
-            program: ProgramBuffer::find(context, &object.program).unwrap(),
+            model: ModelBuffer::find(context, &object.model).map_err(|e| 
+                ResourceError::Loading(e, object.name.clone(), Self::get_type()))?,
+            program: ProgramBuffer::find(context, &object.program).map_err(|e| 
+                ResourceError::Loading(e, object.name.clone(), Self::get_type()))?,
         };
-        context.resources.insert(Box::new(buffer))
+        
+        Ok(context.resources.insert(Box::new(buffer)))
     }
 }
 
 impl ObjectBuffer {
-    pub fn render_command(&self, context: &LabyrinthContext) -> Vec<RenderCommand> {
+    pub fn render_command(&self, context: &LabyrinthContext) -> crate::LabyrinthResult<Vec<RenderCommand>> {
         {
-            let model = ModelBuffer::get(context, self.model).unwrap();
+            let model = ModelBuffer::get(context, self.model)?;
             let mut buffer = Vec::new();
             for mesh_idx in model.meshes.iter() {
-                let mesh = MeshBuffer::get(context, *mesh_idx).unwrap();
-                let mat = MaterialBuffer::get(context, mesh.material).unwrap();
-                let effect = EffectBuffer::get(context, mat.effect).unwrap();
+                let mesh = MeshBuffer::get(context, *mesh_idx)?;
+                let mat = MaterialBuffer::get(context, mesh.material)?;
+                let effect = EffectBuffer::get(context, mat.effect)?;
 
                 buffer.push(RenderCommand::new(
                     MaterialMap::new(&effect),
@@ -59,7 +64,8 @@ impl ObjectBuffer {
                     self.program,
                 ));
             }
-            buffer
+            
+            Ok(buffer)
         }
     }
 }
