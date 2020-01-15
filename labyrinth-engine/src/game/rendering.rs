@@ -134,6 +134,20 @@ impl MaterialMap {
 
 implement_uniform_block!(MaterialMap, material);
 
+#[derive(Copy, Clone)]
+pub struct BonesMap {
+    bones: BoneUniform
+}
+
+implement_uniform_block!(BonesMap, bones);
+
+#[derive(Copy, Clone)]
+pub struct BoneUniform {
+    bones: [FloatMat4; 10]
+}
+
+implement_uniform_block!(BoneUniform, bones);
+
 pub struct RenderCommand {
     pub matrix: FloatMat4,
     pub depth_mvp: FloatMat4,
@@ -252,7 +266,7 @@ impl<'a> Renderer<'a> {
 
         let mut camera = Camera::new();
         *camera.get_position_mut() = FloatPoint3::new(3.5, 2.5, -3.5);
-        *camera.get_look_at_mut() = FloatPoint3::new(0.0, 0.0, 0.0);
+        *camera.get_look_at_mut() = FloatPoint3::new(0.0, 1.0, 0.0);
 
         let pos = FloatVec3::new((context.t * 1.75).sin() * 4.0 + 2.0, 3.5, context.t.cos() * 8.0);
 
@@ -344,6 +358,9 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         };
 
+        let bones =  glium::uniforms::UniformBuffer::new(facade, 
+            BonesMap { bones: BoneUniform { bones: [labyrinth_cgmath::One::one(); 10] }}).unwrap();
+
         for command in buffer.inner.iter() {
             let material = glium::uniforms::UniformBuffer::new(facade, command.material).map_err(|e| RenderError::Render(e.into()))?;
             //let tex = context.get_texture(&command.texture).unwrap();
@@ -370,6 +387,7 @@ impl<'a> Renderer<'a> {
                 camera_pos: camera.get_position(),
                 matmap: &material,
                 lightmap: &lightmap,
+                bones: &bones,
             };
             target
                 .draw(

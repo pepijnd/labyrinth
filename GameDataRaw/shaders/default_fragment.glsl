@@ -5,6 +5,7 @@ in vec3 v_normal;
 in vec3 v_position;
 in vec4 v_shadow_coords;
 in mat3 tbn;
+in vec4 v_bones;
 
 out vec4 color;
 
@@ -130,4 +131,6 @@ void main() {
     );
 
     color.a *= material.alpha;
+    color = normalize(v_bones);
+    color.a = 1;
 }

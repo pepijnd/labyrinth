@@ -42,7 +42,11 @@ pub fn parse_collada_file(input: String) -> Result<ColladaAssets, ConvertError> 
                                     Some(x) => (x.x as f32, x.y as f32),
                                     None => (0_f32, 0_f32)
                                 },
-                                obj.joint_weights[verts.0].joints,
+                                {
+                                    let mut a = [0_i32; 4];
+                                    obj.joint_weights[verts.0].joints.iter().zip(&mut a).map(|(a, b)| *b = *a as i32).for_each(drop);
+                                    a
+                                },
                                 obj.joint_weights[verts.0].weights,
                             ),
                             (
@@ -51,7 +55,11 @@ pub fn parse_collada_file(input: String) -> Result<ColladaAssets, ConvertError> 
                                     Some(x) => (x.x as f32, x.y as f32),
                                     None => (0_f32, 0_f32)
                                 },
-                                obj.joint_weights[verts.1].joints,
+                                {
+                                    let mut a = [0_i32; 4];
+                                    obj.joint_weights[verts.1].joints.iter().zip(&mut a).map(|(a, b)| *b = *a as i32).for_each(drop);
+                                    a
+                                },
                                 obj.joint_weights[verts.1].weights,
                             ),
                             (
@@ -60,7 +68,11 @@ pub fn parse_collada_file(input: String) -> Result<ColladaAssets, ConvertError> 
                                     Some(x) => (x.x as f32, x.y as f32),
                                     None => (0_f32, 0_f32)
                                 },
-                                obj.joint_weights[verts.2].joints,
+                                {
+                                    let mut a = [0_i32; 4];
+                                    obj.joint_weights[verts.2].joints.iter().zip(&mut a).map(|(a, b)| *b = *a as i32).for_each(drop);
+                                    a
+                                },
                                 obj.joint_weights[verts.2].weights,
                             ),
                         ]);

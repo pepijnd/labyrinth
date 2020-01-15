@@ -31,8 +31,8 @@ pub struct Vertex {
     pub normal: (f32, f32, f32),
     pub tangent: (f32, f32, f32),
     pub bitangent: (f32, f32, f32),
-    pub joints: [u8; 4],
-    pub joint_weights: [f32; 4],
+    pub b_index: [i32; 4],
+    pub b_weight: [f32; 4],
 }
 
 implement_vertex!(
@@ -42,21 +42,21 @@ implement_vertex!(
     normal,
     tangent,
     bitangent,
-    joints,
-    joint_weights
+    b_index,
+    b_weight
 );
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Vertices {
     position: Vec<(f32, f32, f32)>,
     tex_coords: Vec<(f32, f32)>,
-    joints: Vec<[u8; 4]>,
+    joints: Vec<[i32; 4]>,
     joint_weights: Vec<[f32; 4]>,
 }
 
 impl Vertex {
     pub fn from_vertices(
-        input: Vec<((f32, f32, f32), (f32, f32), [u8; 4], [f32; 4])>,
+        input: Vec<((f32, f32, f32), (f32, f32), [i32; 4], [f32; 4])>,
     ) -> Vec<Vertex> {
         let mut vertices = Vec::new();
         let v0: FloatVec3 = input[0].0.into();
@@ -84,8 +84,8 @@ impl Vertex {
                 normal: normal.into(),
                 tangent: tangent.into(),
                 bitangent: bitangent.into(),
-                joints: v.2,
-                joint_weights: v.3,
+                b_index: v.2,
+                b_weight: v.3,
             })
         }
         vertices
@@ -95,7 +95,7 @@ impl Vertex {
 impl Vertices {
     pub fn to_vertices(&self) -> Vec<Vertex> {
         let mut vertices = Vec::new();
-        let verts: Vec<((f32, f32, f32), (f32, f32), [u8; 4], [f32; 4])> = izip!(
+        let verts: Vec<((f32, f32, f32), (f32, f32), [i32; 4], [f32; 4])> = izip!(
             self.position.iter().cloned(),
             self.tex_coords.iter().cloned(),
             self.joints.iter().cloned(),
@@ -118,10 +118,10 @@ impl Vertices {
                 .iter()
                 .map(|x| x.tex_coords)
                 .collect::<Vec<(f32, f32)>>(),
-            joints: vertices.iter().map(|x| x.joints).collect::<Vec<[u8; 4]>>(),
+            joints: vertices.iter().map(|x| x.b_index).collect::<Vec<[i32; 4]>>(),
             joint_weights: vertices
                 .iter()
-                .map(|x| x.joint_weights)
+                .map(|x| x.b_weight)
                 .collect::<Vec<[f32; 4]>>(),
         }
     }
