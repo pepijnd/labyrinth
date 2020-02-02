@@ -11,7 +11,7 @@ use crate::resources::material::EffectBuffer;
 use crate::resources::material::MaterialBuffer;
 use crate::impl_resource;
 use crate::resources::{
-    Findable, Loadable,
+    Resource, Loadable,
     model::MeshBuffer, 
     model::ModelBuffer, 
     shader::ProgramBuffer

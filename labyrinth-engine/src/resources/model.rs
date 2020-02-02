@@ -9,7 +9,7 @@ use crate::game::context::LabyrinthContext;
 use crate::resources::material::MaterialBuffer;
 use crate::impl_resource;
 use crate::resources::{
-    Findable, Loadable
+    Resource, Loadable
 };
 
 use crate::LabyrinthResult;

@@ -9,18 +9,18 @@ labyrinth-glyph = { path = "../labyrinth-glyph"}
 labyrinth-cgmath = { path = "../labyrinth-cgmath"} 
 labyrinth-assets = { path = "../labyrinth-assets"} 
 
-glium = ">= 0.26.0-alpha3"
-glutin = ">= 0.22.0-alpha3"
-imgui = ">= 0.1.0"
-imgui-glium-renderer = ">= 0.1.0"
-imgui-winit-support = ">= 0.1.0"
-image = "0.22.1"
-toml = "0.5.3"
-glyph_brush = "0.5.3"
-num-traits = "0.2.8"
-serde = { version = "1.0.101", features = ["derive"] }
-serde_json = "1.0.40"
-generational-arena = "0.2.3"
-downcast-rs = "1.1.0"
+glium = ">= 0.26.0-alpha6"
+glutin = ">= 0.22.0-alpha6"
+imgui = ">= 0.2.1"
+imgui-glium-renderer = ">= 0.2.0"
+imgui-winit-support = ">= 0.2.1"
+image = "0.22.4"
+toml = "0.5.6"
+glyph_brush = "0.6.1"
+num-traits = "0.2.11"
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = "1.0.45"
+generational-arena = "0.2.7"
+downcast-rs = "1.1.1"
 log = "0.4.8"
 env_logger = "0.7.1"

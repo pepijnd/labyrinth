@@ -164,14 +164,16 @@ impl<'a, 'b, H: BuildHasher> GlyphBrushBuilder<'a, 'b, H> {
 
     /// Builds a `GlyphBrush` using the input glium facade
     pub fn build<F: Facade>(self, facade: &F) -> GlyphBrush<'a, 'b, H> {
-        let (cache_width, cache_height) = self.inner.initial_cache_size;
-        let glyph_brush = self.inner.build();
+        let cache_size = (256, 256);
+        let mut glyph_brush = self.inner;
+        glyph_brush = glyph_brush.initial_cache_size(cache_size);
+        let glyph_brush = glyph_brush.build();
 
         static VERTEX_SHADER: &str = include_str!("shader/vert.glsl");
         static FRAGMENT_SHADER: &str = include_str!("shader/frag.glsl");
         let program = Program::from_source(facade, VERTEX_SHADER, FRAGMENT_SHADER, None).unwrap();
 
-        let texture = Texture2d::empty(facade, cache_width, cache_height).unwrap();
+        let texture = Texture2d::empty(facade, cache_size.0, cache_size.1).unwrap();
         let index_buffer = glium::index::NoIndices(PrimitiveType::TriangleStrip);
 
         // We only need this so that we have groups of four

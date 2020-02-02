@@ -6,7 +6,7 @@ use labyrinth_cgmath::FloatVec3;
 
 use crate::game::context::LabyrinthContext;
 use crate::resources::{
-    Loadable, Findable
+    Loadable, Resource
 };
 
 use crate::impl_resource;
@@ -78,7 +78,7 @@ impl Loadable for MaterialBuffer {
     {
         let buffer = MaterialBuffer {
             name: material.name.clone(),
-            effect: EffectBuffer::find(context, &material.effect).map_err(|e| 
+            effect: context.resources.find(&material.effect).map_err(|e| 
                 ResourceError::Loading(e, material.name.clone(), Self::get_type()))?
         };
         Ok(context.resources.insert(Box::new(buffer)))

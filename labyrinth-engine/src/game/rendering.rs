@@ -15,7 +15,7 @@ use labyrinth_cgmath::Rad;
 use labyrinth_cgmath::{FloatMat4, FloatPoint3, FloatVec3};
 
 use crate::resources::{
-    Findable,
+    Resource,
     material::EffectBuffer,
     material::EffectUniform,
     shader::ProgramBuffer,
@@ -248,13 +248,13 @@ impl<'a> Renderer<'a> {
         let shared = context.clone();
         let context = shared.borrow();
 
-        let player = ObjectBuffer::find(&context, "BoxChar")?;
-        let player = Entity::new("BoxChar", player);
+        let player = ObjectBuffer::find(&context, "player")?;
+        let player = Entity::new("player", player);
 
-        let skeleton = SkeletonBuffer::find(&context, "BoxChar")?;
+        let skeleton = SkeletonBuffer::find(&context, "player")?;
         let _skeleton = SkeletonBuffer::get(&context, skeleton);
 
-        let animation = AnimationBuffer::find(&context, "BoxChar")?;
+        let animation = AnimationBuffer::find(&context, "player")?;
         let _animation = AnimationBuffer::get(&context, animation)?;
 
         player.render_queue(&context, &mut buffer)?;

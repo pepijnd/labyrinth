@@ -4,7 +4,7 @@ use generational_arena::Index;
 use labyrinth_assets::assets::Program;
 
 use crate::resources::ResourceError;
-use crate::resources::Findable;
+use crate::resources::Resource;
 
 use crate::game::context::LabyrinthContext;
 use crate::impl_resource;

@@ -1,5 +1,6 @@
 {
     "lldb.launch.sourceMap": {
-        "/rustc/72b2abfd65ba024e12d7fe51852a309419f494d8": "/home/pepijn/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust"
-    }
+        "/rustc/19bd93467617a447c22ec32cc1cf14d40cb84ccf": "/home/pepijn/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust"
+    },
+    "rust-analyzer.expandMacro": true
 }

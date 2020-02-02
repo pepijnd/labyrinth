@@ -1,5 +1,6 @@
 use glium::backend::Facade;
-use generational_arena::Index;
+use crate::resources::ResourceIndex;
+use crate::resources::ResourceBase;
 
 use labyrinth_assets::assets::{
     Skeleton,
@@ -26,9 +27,10 @@ impl_resource!(SkeletonBuffer, name);
 impl Loadable for SkeletonBuffer {
     type Source = Skeleton;
 
-    fn load<F>(skeleton: &Skeleton, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<Index>
+    fn load<F, T>(skeleton: &Skeleton, _facade: &F, context: &mut LabyrinthContext) -> crate::LabyrinthResult<ResourceIndex<SkeletonBuffer>>
     where
         F: Facade,
+        T: ResourceBase
     {
         let buffer = SkeletonBuffer {
             name: skeleton.name.clone(),
@@ -36,7 +38,7 @@ impl Loadable for SkeletonBuffer {
             bind_poses: skeleton.bind_poses.clone()
         };
         
-        Ok(context.resources.insert(Box::new(buffer)))
+        Ok(context.resources.insert(buffer))
     }
 }
 

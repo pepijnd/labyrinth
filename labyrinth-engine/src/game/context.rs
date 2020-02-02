@@ -7,18 +7,20 @@ use crate::resources::{
     ResourceBase,
 };
 
+use crate::resources::ResourceArena;
+
 pub type Shared<T> = Rc<RefCell<T>>;
 pub type SharedContext = Shared<LabyrinthContext>;
 
 pub struct LabyrinthContext {
-    pub resources: Arena<Box<dyn ResourceBase>>,
+    pub resources: ResourceArena,
     pub t: f32,
 }
 
 impl LabyrinthContext {
     pub fn create() -> SharedContext {
         let context = LabyrinthContext {
-            resources: Arena::new(),
+            resources: ResourceArena::new(),
             t: 0.0,
         };
 

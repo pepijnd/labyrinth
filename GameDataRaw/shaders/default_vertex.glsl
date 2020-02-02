@@ -13,7 +13,6 @@ out vec2 v_tex_coords;
 out vec3 v_position;
 out vec4 v_shadow_coords;
 out mat3 tbn;
-out vec4 v_bones;
 
 uniform mat4 view;
 uniform mat4 perspective;
@@ -22,7 +21,8 @@ uniform mat4 depth_bias_mvp;
 uniform mat4 bones[10];
 
 void main() {
-    vec4 b_position = vec4(0.0);
+    // vec4 b_position = vec4(1.0);
+    vec4 b_position = vec4(position, 1.0);
     mat4 modelview = view * matrix;
     vec3 t = normalize(tangent - normal * dot(normal, tangent));
     tbn = transpose(mat3(
@@ -30,16 +30,15 @@ void main() {
         normalize(mat3(modelview) * bitangent),
         normalize(mat3(modelview) * normal)
     ));
-    mat4 bone;
-    float weight;
-    for (int i=0; i<4; i++) {
-        if (b_index[i] != 255) {
-            bone = bones[b_index[i]];
-            weight = b_weight[i];
-            b_position += bone * vec4(position, 1.0) * weight;
-        }
-    }
-    v_bones = vec4(b_index);
+    // mat4 bone;
+    // float weight;
+    // for (int i=0; i<4; i++) {
+    //     if (b_index[i] != 255) {
+    //         bone = bones[b_index[i]];
+    //         weight = b_weight[i];
+    //         b_position += bone * vec4(position, 1.0) * weight;
+    //     }
+    // }
     v_tex_coords = tex_coords;
     v_normal = transpose(inverse(mat3(modelview))) * normal;
     v_shadow_coords = depth_bias_mvp * vec4(b_position.xyz + v_normal * 0.01, 1.0);
